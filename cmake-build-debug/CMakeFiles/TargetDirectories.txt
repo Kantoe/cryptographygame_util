@@ -1,0 +1,3 @@
+/home/idokantor/CLionProjects/cryptography_game_util/cmake-build-debug/CMakeFiles/cryptography_game_util.dir
+/home/idokantor/CLionProjects/cryptography_game_util/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/idokantor/CLionProjects/cryptography_game_util/cmake-build-debug/CMakeFiles/rebuild_cache.dir
