@@ -1,3 +1,7 @@
+/*
+* Ido Kantor
+* methods used in code for the game
+ */
 #include "cryptography_game_util.h"
 
 
