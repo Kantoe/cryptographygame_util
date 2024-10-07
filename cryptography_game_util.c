@@ -22,5 +22,5 @@ int createIPv4Address(const char *ip, const int port, struct sockaddr_in *addres
     else {
         ip_check = inet_pton(AF_INET,ip , &address->sin_addr.s_addr);
     }
-    return PORT_RANGE_MIN < port && port <= PORT_RANGE_MAX && ip_check != 0;
+    return PORT_RANGE_MIN < port && port <= PORT_RANGE_MAX && ip_check != CHECK_IP;
 }

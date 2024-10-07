@@ -14,6 +14,7 @@
 #define NO_IP 0
 #define PORT_RANGE_MIN 0
 #define PORT_RANGE_MAX 65535
+#define CHECK_IP 0
 
 /* Creates a TCP IPv4 socket.
  * Returns: The file descriptor for the created socket, or -1 on failure.
