@@ -6,3 +6,7 @@ set(CMAKE_C_STANDARD 11)
 add_library(cryptography_game_util STATIC
         cryptography_game_util.c
 )
+
+add_executable(Test test.c)
+
+target_link_libraries(Test cryptography_game_util)
