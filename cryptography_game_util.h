@@ -47,7 +47,7 @@ int createIPv4Address(const char *ip, int port, struct sockaddr_in *address);
  *
  */
 
-void execute_command(const char *command, char **buffer);
+int execute_command(const char *command, char **buffer);
 
 void exe_command(const char* command, const int socket_fd);
 

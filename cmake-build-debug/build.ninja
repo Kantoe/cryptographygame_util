@@ -71,6 +71,38 @@ build libcryptography_game_util.a: C_STATIC_LIBRARY_LINKER__cryptography_game_ut
   TARGET_FILE = libcryptography_game_util.a
   TARGET_PDB = cryptography_game_util.a.dbg
 
+# =============================================================================
+# Object build statements for EXECUTABLE target Test
+
+
+#############################################
+# Order-only phony target for Test
+
+build cmake_object_order_depends_target_Test: phony || cmake_object_order_depends_target_cryptography_game_util
+
+build CMakeFiles/Test.dir/test.c.o: C_COMPILER__Test_unscanned_Debug /home/idokantor/CLionProjects/cryptography_game_util/test.c || cmake_object_order_depends_target_Test
+  DEP_FILE = CMakeFiles/Test.dir/test.c.o.d
+  FLAGS = -g -std=gnu11 -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles/Test.dir
+  OBJECT_FILE_DIR = CMakeFiles/Test.dir
+
+
+# =============================================================================
+# Link build statements for EXECUTABLE target Test
+
+
+#############################################
+# Link the executable Test
+
+build Test: C_EXECUTABLE_LINKER__Test_Debug CMakeFiles/Test.dir/test.c.o | libcryptography_game_util.a || libcryptography_game_util.a
+  FLAGS = -g
+  LINK_LIBRARIES = libcryptography_game_util.a
+  OBJECT_DIR = CMakeFiles/Test.dir
+  POST_BUILD = :
+  PRE_LINK = :
+  TARGET_FILE = Test
+  TARGET_PDB = Test.dbg
+
 
 #############################################
 # Utility command for edit_cache
@@ -107,7 +139,7 @@ build cryptography_game_util: phony libcryptography_game_util.a
 #############################################
 # Folder: /home/idokantor/CLionProjects/cryptography_game_util/cmake-build-debug
 
-build all: phony libcryptography_game_util.a
+build all: phony libcryptography_game_util.a Test
 
 # =============================================================================
 # Built-in targets

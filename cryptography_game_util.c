@@ -25,41 +25,37 @@ int createIPv4Address(const char *ip, const int port, struct sockaddr_in *addres
     return PORT_RANGE_MIN < port && port <= PORT_RANGE_MAX && ip_check != CHECK_IP;
 }
 
-void execute_command(const char *command, char **buffer) {
-    size_t buffer_size = CHUNK_SIZE;
-    size_t total_length = 0;
-    *buffer = malloc(buffer_size);
-
-    if (*buffer == NULL) {
-        perror("malloc failed");
-        exit(1);
-    }
-
+int execute_command(const char *command, char **buffer) {
     FILE* fp = popen(command, "r");
     if (fp == NULL) {
         perror("popen failed");
-        free(*buffer);
-        exit(1);
+        return -1;
     }
-
-    size_t bytes_read;
-    while ((bytes_read = fread(*buffer + total_length, 1, CHUNK_SIZE, fp)) > 0) {
-        total_length += bytes_read;
-
-        if (total_length >= buffer_size - 1) {
-            buffer_size += CHUNK_SIZE;
-            char* temp = realloc(*buffer, buffer_size);
-            if (temp == NULL) {
-                perror("realloc failed");
-                free(*buffer);
-                pclose(fp);
-                exit(1);
-            }
-            *buffer = temp;
-        }
+    if(fseek(fp, 0, SEEK_END) != 0) {
+        perror("fseek failed");
+        pclose(fp);
+        return -1;
     }
-    (*buffer)[total_length] = '\0';  // Null-terminate the string
+    const long size = ftell(fp);
+    if(size < 0) {
+        perror("ftell failed");
+        pclose(fp);
+        return -1;
+    }
+    rewind(fp);
+    *buffer = malloc(size + 1);
+    if(*buffer == NULL) {
+        perror("malloc failed");
+        pclose(fp);
+        return -1;
+    }
+    size_t bytes_read = 0;
+    while(bytes_read < size) {
+        bytes_read += fread(*buffer, 1, size, fp);
+    }
+    (*buffer)[size] = 0;  // Null-terminate the string
     pclose(fp);
+    return 0;
 }
 
 void exe_command(const char* command, const int socket_fd) {
