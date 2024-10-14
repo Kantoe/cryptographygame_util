@@ -25,49 +25,19 @@ int createIPv4Address(const char *ip, const int port, struct sockaddr_in *addres
     return PORT_RANGE_MIN < port && port <= PORT_RANGE_MAX && ip_check != CHECK_IP;
 }
 
-int execute_command(const char *command, char **buffer) {
-    FILE* fp = popen(command, "r");
-    if (fp == NULL) {
-        perror("popen failed");
-        return -1;
-    }
-    if(fseek(fp, 0, SEEK_END) != 0) {
-        perror("fseek failed");
-        pclose(fp);
-        return -1;
-    }
-    const long size = ftell(fp);
-    if(size < 0) {
-        perror("ftell failed");
-        pclose(fp);
-        return -1;
-    }
-    rewind(fp);
-    *buffer = malloc(size + 1);
-    if(*buffer == NULL) {
-        perror("malloc failed");
-        pclose(fp);
-        return -1;
-    }
-    size_t bytes_read = 0;
-    while(bytes_read < size) {
-        bytes_read += fread(*buffer, 1, size, fp);
-    }
-    (*buffer)[size] = 0;  // Null-terminate the string
-    pclose(fp);
-    return 0;
-}
-
-void exe_command(const char* command, const int socket_fd) {
+int execute_command_and_send(const char* command, const int socket_fd) {
     FILE* fp = popen(command, "r");  // Open the command for reading
-    if (fp == NULL) {
+    if(fp == NULL) {
         perror("popen failed");
-        exit(1);
+        return -1;
     }
-    char buffer[256];
+    char output[256];
     // Read each line from the command output
-    while (fgets(buffer, sizeof(buffer), fp) != NULL) {
+    while (fgets(output, sizeof(output), fp) != NULL) {
+        char buffer[260];
+        snprintf(buffer, sizeof(buffer), "OUT %s", output);
         send(socket_fd, buffer, strlen(buffer), 0);
     }
     pclose(fp);  // Close the file pointer
+    return 0;
 }
