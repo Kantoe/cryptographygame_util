@@ -237,7 +237,7 @@ int processString(char* str, char** parsed, char** parsedpipe)
     return 1 + piped;
 }
 
-int main()
+void main()
 {
     char inputString[MAXCOM], *parsedArgs[MAXLIST];
     char* parsedArgsPiped[MAXLIST];
@@ -264,5 +264,4 @@ int main()
         if (execFlag == 2)
             execArgsPiped(parsedArgs, parsedArgsPiped);
     }
-    return 0;
 }

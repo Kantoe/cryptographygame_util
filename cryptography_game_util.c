@@ -43,7 +43,7 @@ int execute_command_and_send(const char* command, const int socket_fd) {
     char output[1024];
     while (fgets(output, sizeof(output), pout) != NULL) {
         // Send each line to the socket
-        char buffer[1028]; // +4 for "OUT " prefix
+        char buffer[1028] = {0}; // +4 for "OUT " prefix
         snprintf(buffer, sizeof(buffer), "OUT %s", output);
         send(socket_fd, buffer, strlen(buffer), 0);
     }
