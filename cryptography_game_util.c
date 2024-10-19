@@ -46,6 +46,7 @@ int execute_command_and_send(const char* command, const int socket_fd) {
         char buffer[1028] = {0}; // +4 for "OUT " prefix
         snprintf(buffer, sizeof(buffer), "OUT %s", output);
         send(socket_fd, buffer, strlen(buffer), 0);
+        usleep(1000);
     }
 
     FILE* perr = fdopen(pfd[0], "r");
