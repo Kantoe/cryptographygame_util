@@ -68,3 +68,32 @@ int execute_command_and_send(const char* command, const int socket_fd) {
     fclose(perr);
     return 0;
 }
+
+int parse_output_to_segments(char* segment, size_t length) {
+    char buffer[length + 1];
+    strncpy(buffer, segment, length);
+    buffer[length] = 0;
+    const char* type = strtok(segment, ";");
+    const char* length_str = strtok(NULL, ";");
+    const char* data = strtok(NULL, ";");
+    if (type == NULL || length_str == NULL || data == NULL) {
+        return -1;
+    }
+    printf("%s, %s, %s\n", type, length_str, data);
+    return 0;
+}
+
+int parse_output(const char* output, const size_t length) {
+    char buffer[length];
+    strncpy(buffer, output, length);
+    buffer[length - 1] = 0;
+    char* segment = strtok(buffer, "END;");
+    while (segment != NULL) {
+        char* sub_segment = strtok(segment, ";");
+        if (sub_segment != NULL) {
+            parse_output(sub_segment, sizeof(sub_segment));
+        }
+        segment = strtok(NULL, "END;");
+    }
+    return 0;
+}

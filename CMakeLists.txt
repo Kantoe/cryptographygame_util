@@ -9,5 +9,5 @@ add_library(cryptography_game_util STATIC
 
 add_executable(Test test.c)
 
-target_link_libraries(Test readline)
+target_link_libraries(Test cryptography_game_util)
 
