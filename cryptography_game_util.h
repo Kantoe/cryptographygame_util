@@ -1,6 +1,6 @@
 /*
 * Ido Kantor
-* methods used in code for the game
+* methods used in code for cryptography_game
  */
 #ifndef CRYPTOGRAPHY_GAME_UTIL_H
 #define CRYPTOGRAPHY_GAME_UTIL_H
