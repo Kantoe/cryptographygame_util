@@ -4,6 +4,8 @@
  */
 #include "cryptography_game_util.h"
 
+#include <limits.h>
+
 
 int createTCPIpv4Socket()
 {
@@ -69,31 +71,87 @@ int execute_command_and_send(const char* command, const int socket_fd) {
     return 0;
 }
 
-int parse_output_to_segments(char* segment, size_t length) {
-    char buffer[length + 1];
-    strncpy(buffer, segment, length);
-    buffer[length] = 0;
-    const char* type = strtok(segment, ";");
-    const char* length_str = strtok(NULL, ";");
-    const char* data = strtok(NULL, ";");
-    if (type == NULL || length_str == NULL || data == NULL) {
+int numPlaces (int n) {
+    int r = 1;
+    if (n < 0) n = (n == 0) ? INT_MAX: -n;
+    while (n > 9) {
+        n /= 10;
+        r++;
+    }
+    return r;
+}
+
+int extract_tlength(const char *tlength_str) {
+    // Skip "tlength:"
+    const char *number_start = tlength_str + 8;
+    char *end_ptr = strchr(number_start, ';');
+    if (!end_ptr) {
+        // If no delimiter found, it's an invalid format
+        fprintf(stderr, "Invalid tlength format\n");
         return -1;
     }
-    printf("%s, %s, %s\n", type, length_str, data);
+    // Create a temporary buffer to store the number
+    const size_t length = end_ptr - number_start;
+    char temp[length + 1];
+    strncpy(temp, number_start, length);
+    temp[length] = 0;
+    // Convert to integer
+    return atoi(temp);
+}
+
+int8_t process_packet(const char *packets, char* packets_data, const ssize_t tlength) {
+    // Make a copy of the packet for parsing
+    const char delim = ';';
+    const size_t rest_of_length = 9 + numPlaces(tlength); //-9 for tlength: + ; -amount of tlength digits
+    char *packet = strndup(packets + rest_of_length, tlength - rest_of_length);
+    if (!packet) {
+        perror("Failed to allocate memory for buffer");
+        return -1;
+    }
+    // Step 3: Parse the fields using the delimiter
+    const char *type = strtok(packet, &delim);
+    const char *length_str = strtok(NULL, &delim);
+    const char *data = strtok(NULL, &delim);
+    if(type && length_str && data) {
+        if(strncmp(type, "type:", 5) == 0 && strncmp(length_str, "length:", 7) == 0) {
+            strcat(packets_data, data + 5);
+        }
+        else {
+            fprintf(stderr, "Invalid packet fields\n");
+            return -1;
+        }
+    }
+    else {
+        fprintf(stderr, "Failed to parse packet fields\n");
+        return -1;
+    }
+    free(packet);
     return 0;
 }
 
-int parse_output(const char* output, const size_t length) {
-    char buffer[length];
-    strncpy(buffer, output, length);
-    buffer[length - 1] = 0;
-    char* segment = strtok(buffer, "END;");
-    while (segment != NULL) {
-        char* sub_segment = strtok(segment, ";");
-        if (sub_segment != NULL) {
-            parse_output(sub_segment, sizeof(sub_segment));
+int parse_received_packets(const char* received_packets, char* packets_data, const size_t packets_size) {
+    const char* current = received_packets;
+    size_t current_length = 0;
+    while (*current && current_length < packets_size) {
+        const char* tlength_str = strstr(current, "tlength:");
+        if (tlength_str == NULL) {
+            return -1;
         }
-        segment = strtok(NULL, "END;");
+        const ssize_t tlength = extract_tlength(tlength_str);
+        if(tlength <= 0) {
+            printf("tlength is less than zero\n");
+            return -1;
+        }
+        if(strlen(current) < tlength && tlength < packets_size) {
+            printf("tlength is smaller than current length\n");
+            return -1;
+        }
+        const int8_t check = process_packet(current, packets_data, tlength);
+        if(check == -1) {
+            return -1;
+        }
+        current += tlength;
+        current_length += tlength;
     }
     return 0;
 }

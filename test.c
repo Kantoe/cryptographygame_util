@@ -1,4 +1,15 @@
 #include "cryptography_game_util.h"
 int main() {
-    parse_output("OUT;2;AB;END;OUT;3;EFG;END;OUT;OUT;5;11111;END;", sizeof("OUT;2;AB;END;OUT;3;EFG;END;OUT;OUT;5;11111;END;"));
+    const char *message = "tlength:38;type:OUT;length:4;data:abcdtlength:39;type:IN;length:6;data:efghij";
+    char data [1024] = {0};
+    const int check = parse_received_packets(message, data, strlen(message));
+    printf("%ld\n", strlen("tlength:20;type:OUT;length:4;data:abcd"));
+    printf("%ld\n", strlen("tlength:22;type:IN;length:6;data:efghij"));
+    if (check != -1) {
+        printf("%s\n", data);
+    }
+    else {
+        printf("bad packet\n");
+    }
+    return 0;
 }

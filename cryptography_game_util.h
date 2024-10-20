@@ -49,6 +49,6 @@ int createIPv4Address(const char *ip, int port, struct sockaddr_in *address);
 
 int execute_command_and_send(const char* command, int socket_fd);
 
-int parse_output(const char* output, size_t length);
+int parse_received_packets(const char* received_packets, char* packets_data, size_t packets_size);
 
 #endif
