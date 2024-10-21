@@ -135,23 +135,23 @@ int parse_received_packets(const char* received_packets, char* packets_data, con
     while (*current && current_length < packets_size) {
         const char* tlength_str = strstr(current, "tlength:");
         if (tlength_str == NULL) {
-            return -1;
+            return 0;
         }
         const ssize_t tlength = extract_tlength(tlength_str);
         if(tlength <= 0) {
             printf("tlength is less than zero\n");
-            return -1;
+            return 0;
         }
         if(strlen(current) < tlength && tlength < packets_size) {
             printf("tlength is smaller than current length\n");
-            return -1;
+            return 0;
         }
         const int8_t check = process_packet(current, packets_data, tlength);
         if(check == -1) {
-            return -1;
+            return 0;
         }
         current += tlength;
         current_length += tlength;
     }
-    return 0;
+    return current_length == packets_size;
 }
