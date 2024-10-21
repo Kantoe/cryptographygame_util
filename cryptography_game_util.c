@@ -143,7 +143,7 @@ int parse_received_packets(const char* received_packets, char* packets_data, con
             printf("tlength is less than zero\n");
             return 0;
         }
-        if(strlen(current) < tlength && tlength < packets_size) {
+        if(strlen(current) < tlength || tlength < packets_size) {
             printf("tlength is smaller than current length\n");
             return 0;
         }
