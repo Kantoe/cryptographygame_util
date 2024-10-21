@@ -71,6 +71,7 @@ int execute_command_and_send(const char* command, const int socket_fd) {
     return 0;
 }
 
+
 int numPlaces (int n) {
     int r = 1;
     if (n < 0) n = (n == 0) ? INT_MAX: -n;

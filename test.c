@@ -10,7 +10,7 @@ int main() {
         printf("%s\n", data);
     }
     else {
-        printf("bad packet\n");
+        printf("bad packet");
     }
     return 0;
 }
