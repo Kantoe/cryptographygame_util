@@ -100,7 +100,7 @@ int extract_tlength(const char *tlength_str) {
     return atoi(temp);
 }
 
-int8_t process_packet(const char *packets, char* packets_data, const ssize_t tlength) {
+int8_t process_packet(const char *packets, char* packets_data, char* packets_type, char* packets_length, const ssize_t tlength) {
     // Make a copy of the packet for parsing
     const char delim = ';';
     const size_t rest_of_length = 9 + numPlaces(tlength); //-9 for tlength: + ; -amount of tlength digits
@@ -116,21 +116,26 @@ int8_t process_packet(const char *packets, char* packets_data, const ssize_t tle
     if(type && length_str && data) {
         if(strncmp(type, "type:", 5) == 0 && strncmp(length_str, "length:", 7) == 0) {
             strcat(packets_data, data + 5);
+            strcat(packets_type, type + 5);
+            strcat(packets_length, length_str + 7);
+            //make function that reads data from length separate length field and type to delim
         }
         else {
             fprintf(stderr, "Invalid packet fields\n");
+            free(packet);
             return -1;
         }
     }
     else {
         fprintf(stderr, "Failed to parse packet fields\n");
+        free(packet);
         return -1;
     }
     free(packet);
     return 0;
 }
 
-int parse_received_packets(const char* received_packets, char* packets_data, const size_t packets_size) {
+int parse_received_packets(const char* received_packets, char* packets_data, char* packets_type, char* packets_length, const size_t packets_size) {
     const char* current = received_packets;
     size_t current_length = 0;
     while (*current && current_length < packets_size) {
@@ -143,11 +148,11 @@ int parse_received_packets(const char* received_packets, char* packets_data, con
             printf("tlength is less than zero\n");
             return 0;
         }
-        if(strlen(current) < tlength || tlength < packets_size) {
+        if(strlen(current) < tlength) {
             printf("tlength is smaller than current length\n");
             return 0;
         }
-        const int8_t check = process_packet(current, packets_data, tlength);
+        const int8_t check = process_packet(current, packets_data, packets_type, packets_length,tlength);
         if(check == -1) {
             return 0;
         }
