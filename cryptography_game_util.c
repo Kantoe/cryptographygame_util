@@ -100,7 +100,14 @@ int extract_tlength(const char *tlength_str) {
     return atoi(temp);
 }
 
-int8_t process_packet(const char *packets, char* packets_data, char* packets_type, char* packets_length, const ssize_t tlength) {
+/*
+ * takes a single packet and processes it by its fields
+ * appending them to a pointer of all packets fields
+ */
+
+int8_t process_packet(
+    const char *packets, char* packets_data, char* packets_type, char* packets_length, const ssize_t tlength,
+    const size_t packets_length_size, const ssize_t packets_data_size, const size_t packets_type_size) {
     // Make a copy of the packet for parsing
     const char delim = ';';
     const size_t rest_of_length = 9 + numPlaces(tlength); //-9 for tlength: + ; -amount of tlength digits
@@ -111,14 +118,21 @@ int8_t process_packet(const char *packets, char* packets_data, char* packets_typ
     }
     // Step 3: Parse the fields using the delimiter
     const char *type = strtok(packet, &delim);
-    const char *length_str = strtok(NULL, &delim);
+    const char *data_length = strtok(NULL, &delim);
     const char *data = strtok(NULL, &delim);
-    if(type && length_str && data) {
-        if(strncmp(type, "type:", 5) == 0 && strncmp(length_str, "length:", 7) == 0) {
-            strcat(packets_data, data + 5);
-            strcat(packets_type, type + 5);
-            strcat(packets_length, length_str + 7);
-            //make function that reads data from length separate length field and type to delim
+    if(type && data_length && data) {
+        if(strncmp(type, "type:", 5) == 0 && strncmp(data_length, "length:", 7) == 0) {
+            if(packets_data_size >= strlen(packets_data) + strlen(data)) {
+                strcat(packets_data, data + 5);
+            }
+            if(packets_type_size >= strlen(packets_type) + strlen(type) + 1) {
+                strcat(packets_type, type + 5);
+                strcat(packets_type, ";");
+            }
+            if(packets_length_size >= strlen(packets_length) + strlen(data_length) + 1) {
+                strcat(packets_length, data_length + 7);
+                strcat(packets_length, ";");
+            }
         }
         else {
             fprintf(stderr, "Invalid packet fields\n");
@@ -135,7 +149,10 @@ int8_t process_packet(const char *packets, char* packets_data, char* packets_typ
     return 0;
 }
 
-int parse_received_packets(const char* received_packets, char* packets_data, char* packets_type, char* packets_length, const size_t packets_size) {
+int parse_received_packets(
+    const char* received_packets, char* packets_data, char* packets_type, char* packets_length,
+    const size_t packets_size, const size_t packets_length_size, const ssize_t packets_data_size,
+    const size_t packets_type_size) {
     const char* current = received_packets;
     size_t current_length = 0;
     while (*current && current_length < packets_size) {
@@ -152,7 +169,9 @@ int parse_received_packets(const char* received_packets, char* packets_data, cha
             printf("tlength is smaller than current length\n");
             return 0;
         }
-        const int8_t check = process_packet(current, packets_data, packets_type, packets_length,tlength);
+        const int8_t check = process_packet(current, packets_data, packets_type,
+                                            packets_length, tlength, packets_length_size,
+                                            packets_data_size, packets_type_size);
         if(check == -1) {
             return 0;
         }

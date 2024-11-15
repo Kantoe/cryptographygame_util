@@ -53,6 +53,8 @@ int execute_command_and_send(const char* command, int socket_fd);
  *
  */
 
-int parse_received_packets(const char* received_packets, char* packets_data, char* packets_type, char* packets_length, size_t packets_size);
-
+int parse_received_packets(
+    const char* received_packets, char* packets_data, char* packets_type, char* packets_length,
+    const size_t packets_size, const size_t packets_length_size, const ssize_t packets_data_size,
+    const size_t packets_type_size);
 #endif
