@@ -27,10 +27,14 @@ int createIPv4Address(const char *ip, const int port, struct sockaddr_in *addres
     return PORT_RANGE_MIN < port && port <= PORT_RANGE_MAX && ip_check != CHECK_IP;
 }
 
-int execute_command_and_send(const char* command, const int socket_fd) {
+int execute_command_and_send(const char* command, const size_t command_size ,const int socket_fd) {
     int pfd[2];  // Pipe file descriptors
     if (pipe(pfd) < 0) {
         perror("pipe failed");
+        return -1;
+    }
+    if(command_size > 256) {
+        fprintf(stderr, "command size too large\n");
         return -1;
     }
     char full_command[512];
@@ -45,29 +49,31 @@ int execute_command_and_send(const char* command, const int socket_fd) {
     char output[1024];
     while (fgets(output, sizeof(output), pout) != NULL) {
         // Send each line to the socket
-        char buffer[1028] = {0}; // +4 for "OUT " prefix
-        snprintf(buffer, sizeof(buffer), "OUT %s", output);
+        char buffer[2048] = {0};
+        const size_t new_line_char = strlen(output);
+        output[new_line_char] = '\0';
+        prepare_buffer(buffer, sizeof(buffer), output, "OUT");
         send(socket_fd, buffer, strlen(buffer), 0);
-        usleep(1000);
     }
 
-    FILE* perr = fdopen(pfd[0], "r");
-    if (perr == NULL) {
+    FILE* pipe_err = fdopen(pfd[0], "r");
+    if (pipe_err == NULL) {
         perror("fdopen failed");
         pclose(pout);
         return -1;
     }
 
-    while (fgets(output, sizeof(output), perr) != NULL) {
+    while (fgets(output, sizeof(output), pipe_err) != NULL) {
         // Send each error line to the socket
-        char buffer[1028]; // +4 for "OUT " prefix
-        snprintf(buffer, sizeof(buffer), "OUT %s", output);
+        char buffer[2048] = {0};
+        const size_t new_line_char = strlen(output);
+        output[new_line_char] = '\0';
+        prepare_buffer(buffer, sizeof(buffer), output, "OUT");
         send(socket_fd, buffer, strlen(buffer), 0);
-        usleep(1000);
     }
     // Clean up
     pclose(pout);
-    fclose(perr);
+    fclose(pipe_err);
     return 0;
 }
 
@@ -135,13 +141,13 @@ int8_t process_packet(
             }
         }
         else {
-            fprintf(stderr, "Invalid packet fields\n");
+            //fprintf(stderr, "Invalid packet fields\n");
             free(packet);
             return -1;
         }
     }
     else {
-        fprintf(stderr, "Failed to parse packet fields\n");
+        //fprintf(stderr, "Failed to parse packet fields\n");
         free(packet);
         return -1;
     }
@@ -179,4 +185,26 @@ int parse_received_packets(
         current_length += tlength;
     }
     return current_length == packets_size;
+}
+
+void prepare_buffer(char *buffer, const size_t buffer_size, const char *data, const char *type) {
+    // Calculate the length of the data
+    const int data_length = strlen(data);
+
+    // Format the message without tlength first, so we can calculate it later
+    const int formatted_length = snprintf(buffer, buffer_size, "tlength:;type:%s;length:%d;data:%s",
+        type, data_length, data);
+
+    // If formatting fails or message is too large, return
+    if (formatted_length >= buffer_size) {
+        fprintf(stderr, "Buffer too small to store formatted message.\n");
+        return;
+    }
+    // Calculate tlength as the length of the formatted message (including "tlength:" part)
+    const int message_length = snprintf(NULL, 0, "tlength:%d;type:%s;length:%d;data:%s",
+        formatted_length, type, data_length, data);
+
+    // Format the final message with correct tlength
+    snprintf(buffer, buffer_size, "tlength:%d;type:%s;length:%d;data:%s",
+        message_length, type, data_length, data);
 }
