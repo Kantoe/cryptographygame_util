@@ -50,8 +50,6 @@ int execute_command_and_send(const char* command, const size_t command_size ,con
     while (fgets(output, sizeof(output), pout) != NULL) {
         // Send each line to the socket
         char buffer[2048] = {0};
-        const size_t new_line_char = strlen(output);
-        output[new_line_char] = '\0';
         prepare_buffer(buffer, sizeof(buffer), output, "OUT");
         send(socket_fd, buffer, strlen(buffer), 0);
     }
@@ -66,8 +64,6 @@ int execute_command_and_send(const char* command, const size_t command_size ,con
     while (fgets(output, sizeof(output), pipe_err) != NULL) {
         // Send each error line to the socket
         char buffer[2048] = {0};
-        const size_t new_line_char = strlen(output);
-        output[new_line_char] = '\0';
         prepare_buffer(buffer, sizeof(buffer), output, "OUT");
         send(socket_fd, buffer, strlen(buffer), 0);
     }
@@ -115,7 +111,6 @@ int8_t process_packet(
     const char *packets, char* packets_data, char* packets_type, char* packets_length, const ssize_t tlength,
     const size_t packets_length_size, const ssize_t packets_data_size, const size_t packets_type_size) {
     // Make a copy of the packet for parsing
-    const char delim = ';';
     const size_t rest_of_length = 9 + numPlaces(tlength); //-9 for tlength: + ; -amount of tlength digits
     char *packet = strndup(packets + rest_of_length, tlength - rest_of_length);
     if (!packet) {
@@ -123,9 +118,9 @@ int8_t process_packet(
         return -1;
     }
     // Step 3: Parse the fields using the delimiter
-    const char *type = strtok(packet, &delim);
-    const char *data_length = strtok(NULL, &delim);
-    const char *data = strtok(NULL, &delim);
+    const char *type = strtok(packet, ";");
+    const char *data_length = strtok(NULL, ";");
+    const char *data = strtok(NULL, ";");
     if(type && data_length && data) {
         if(strncmp(type, "type:", 5) == 0 && strncmp(data_length, "length:", 7) == 0) {
             if(packets_data_size >= strlen(packets_data) + strlen(data)) {
@@ -172,7 +167,7 @@ int parse_received_packets(
             return 0;
         }
         if(strlen(current) < tlength) {
-            printf("tlength is smaller than current length\n");
+            printf("tlength is bigger than current length\n");
             return 0;
         }
         const int8_t check = process_packet(current, packets_data, packets_type,
@@ -187,24 +182,31 @@ int parse_received_packets(
     return current_length == packets_size;
 }
 
-void prepare_buffer(char *buffer, const size_t buffer_size, const char *data, const char *type) {
+int8_t prepare_buffer(
+    char *buffer, const size_t buffer_size,
+    const char *data, const char *type) {
     // Calculate the length of the data
     const int data_length = strlen(data);
 
     // Format the message without tlength first, so we can calculate it later
-    const int formatted_length = snprintf(buffer, buffer_size, "tlength:;type:%s;length:%d;data:%s",
+    const int formatted_length = snprintf(buffer, buffer_size,
+        "tlength:;type:%s;length:%d;data:%s",
         type, data_length, data);
 
     // If formatting fails or message is too large, return
     if (formatted_length >= buffer_size) {
-        fprintf(stderr, "Buffer too small to store formatted message.\n");
-        return;
+        fprintf(stderr,
+            "Buffer too small to store formatted message.\n");
+        return 0;
     }
     // Calculate tlength as the length of the formatted message (including "tlength:" part)
-    const int message_length = snprintf(NULL, 0, "tlength:%d;type:%s;length:%d;data:%s",
+    const int message_length = snprintf(NULL, 0,
+        "tlength:%d;type:%s;length:%d;data:%s",
         formatted_length, type, data_length, data);
 
     // Format the final message with correct tlength
-    snprintf(buffer, buffer_size, "tlength:%d;type:%s;length:%d;data:%s",
+    snprintf(buffer, buffer_size,
+        "tlength:%d;type:%s;length:%d;data:%s",
         message_length, type, data_length, data);
+    return 1;
 }

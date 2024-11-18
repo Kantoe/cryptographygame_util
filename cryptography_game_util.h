@@ -58,6 +58,6 @@ int parse_received_packets(
     size_t packets_size, size_t packets_length_size, ssize_t packets_data_size,
     size_t packets_type_size);
 
-void prepare_buffer(char *buffer, size_t buffer_size, const char *data, const char *type);
+int8_t prepare_buffer(char *buffer, size_t buffer_size, const char *data, const char *type);
 
 #endif
