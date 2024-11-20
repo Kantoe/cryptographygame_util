@@ -17,7 +17,9 @@
 #define PORT_RANGE_MAX 65535
 #define CHECK_IP 0
 #define CHUNK_SIZE 1024
-
+#define NUM_ZERO 4
+#define LENGTH_CHECK 4
+#define FINISH_RECEIVE -1
 
 /* Creates a TCP IPv4 socket.
  * Returns: The file descriptor for the created socket, or -1 on failure.
@@ -57,7 +59,22 @@ int parse_received_packets(
     const char* received_packets, char* packets_data, char* packets_type, char* packets_length,
     size_t packets_size, size_t packets_length_size, ssize_t packets_data_size,
     size_t packets_type_size);
+ /*
+  *
+  */
 
 int8_t prepare_buffer(char *buffer, size_t buffer_size, const char *data, const char *type);
+
+/*
+ *
+ */
+
+ssize_t s_send(int socket, const char * data, size_t data_size);
+
+/*
+ *
+ */
+
+ssize_t s_recv(int socket, char * data, size_t data_size);
 
 #endif
