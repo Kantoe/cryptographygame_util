@@ -210,3 +210,49 @@ int8_t prepare_buffer(
         message_length, type, data_length, data);
     return 1;
 }
+
+int send(int socket, char * data, size_t data_size) {
+
+    return 0;
+}
+
+int recv(int socket, char * data, size_t data_size) {
+    return 0;
+}
+/*
+    def send(my_socket, data):
+        """gets data in string and a socket and sends
+        the data back with the length also encoded
+        in the first 4 bytes and if the length isn't big enough
+        it fills the remaining bytes with a zero
+        and then the data encoded"""
+        encoded_data = data.encode()
+        length = len(encoded_data)
+        length_string = str(length)
+        full_length_string = length_string.zfill(NUM_ZERO)
+        length_byte = full_length_string.encode()
+        my_socket.send(length_byte + encoded_data)
+
+    @staticmethod
+    def recv(my_socket):
+        """receives a socket and receives data in two parts the first one receives
+        the first four bytes containing the length of the other data
+        the second receives the data until it's all received
+        by knowing if the length of the data received
+        meets the size received in the first for bytes
+        then it returns all the data received without its length decoded"""
+        raw_size = b''
+        total_data = b''
+        while len(raw_size) < LENGTH_CHECK:
+            raw_size += my_socket.recv(RECEIVE_LENGTH - len(raw_size))
+            if raw_size == FINISH_RECEIVE:
+                return ''
+        data_size = raw_size.decode()
+        size = int(data_size)
+        if data_size.isdigit():
+            while size > SIZE_CHECK:
+                data = my_socket.recv(size)
+                size -= len(data)
+                total_data += data
+        return total_data.decode()
+ */
