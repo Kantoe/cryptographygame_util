@@ -7,7 +7,7 @@
 #include <limits.h>
 
 int8_t check_cd(int sock_fd, const char *command, size_t command_size,
-                char* working_directory, size_t working_directory_size);
+                char *working_directory, size_t working_directory_size);
 
 int createTCPIpv4Socket() {
     return socket(AF_INET, SOCK_STREAM, SOCKET_FLAG);
@@ -28,7 +28,7 @@ int createIPv4Address(const char *ip, const int port,
            CHECK_IP;
 }
 
-int execute_command_and_send(const char *command, const size_t command_size,
+int execute_command_and_send(char *command, const size_t command_size,
                              const int socket_fd, char *working_directory,
                              const size_t working_directory_size) {
     int pfd[2]; // Pipe file descriptors
@@ -37,15 +37,15 @@ int execute_command_and_send(const char *command, const size_t command_size,
         perror("pipe failed");
         return -1;
     }
-    if (command_size + working_directory_size > 500) {
-        char err_buf [256];
+    if (command_size + strlen(working_directory) > 500) {
+        char err_buf[256];
         prepare_buffer(err_buf, sizeof(err_buf), "command size too large\n", "ERR");
         s_send(socket_fd, err_buf, strlen(err_buf));
         return -1;
     }
     char full_command[512];
     snprintf(full_command, sizeof(full_command), "cd %s 2>&%d && %s 2>&%d",
-        working_directory, pfd[1], command, pfd[1]);
+             working_directory, pfd[1], command, pfd[1]);
     FILE *pout = popen(full_command, "r");
     if (pout == NULL) {
         perror("popen failed");
@@ -74,8 +74,8 @@ int execute_command_and_send(const char *command, const size_t command_size,
         prepare_buffer(buffer, sizeof(buffer), output, "OUT");
         s_send(socket_fd, buffer, strlen(buffer));
     }
-    if(!error_check) {
-
+    if (!error_check) {
+        check_cd(socket_fd, command, command_size, working_directory, working_directory_size);
     }
     // Clean up
     pclose(pout);
@@ -233,8 +233,7 @@ ssize_t s_send(const int socket, const char *data, const size_t data_size) {
     char length_string[NUM_ZERO + 1] = {0}; // +1 for null-terminator
     const size_t buf_size = NUM_ZERO + data_size + 1;
     char buffer[buf_size];
-    for (int i = 0; i < buf_size; i++)
-        buffer[i] = 0;
+    memset(buffer, 0, buf_size);
     // Generate a zero-padded length string
     snprintf(length_string, sizeof(length_string), "%0*u", NUM_ZERO,
              (unsigned int) data_size);
@@ -282,19 +281,61 @@ ssize_t s_recv(const int socket, char *data, const size_t data_size) {
     return total_received + LENGTH_CHECK;
 }
 
-int8_t check_cd(const int sock_fd, char *command, const size_t command_size,
-                char* working_directory, const size_t working_directory_size) {
-    if(strstr(command, "cd ")) {
-        const char * new_working_directory = strtok(command + 3, " ");
+char *find_last_cd(const char *command) {
+    char *last_cd = NULL;
+    char *current_cd = strstr(command, "cd ");  // Start searching for the first occurrence
+    while (current_cd != NULL) {
+        last_cd = current_cd;                 // Update the last found pointer
+        current_cd = strstr(current_cd + 1, "cd ");  // Search for the next occurrence
+    }
+    return last_cd;  // Return the last occurrence or NULL if none found
+}
+
+int8_t check_cd(const int sock_fd, const char *command, const size_t command_size,
+                char *working_directory, const size_t working_directory_size) {
+    char *cd_command = find_last_cd(command);
+    if (cd_command != NULL) {
+        char *new_working_directory = strtok(cd_command + 3, " ");
         if (new_working_directory == NULL) {
             return -1;
         }
-        if(strlen(new_working_directory) > working_directory_size) {
+        if (strlen(new_working_directory) + strlen(working_directory) + 1 > working_directory_size) {
             return -1;
         }
-        strcpy(working_directory, new_working_directory); //change cwd for second client and further commands to run
-        char cd_buf [256];
-        prepare_buffer(cd_buf, sizeof(cd_buf), working_directory, "CWD"); //send cwd for first client to print and confirm
+        if (new_working_directory[strlen(new_working_directory) - 1] == '/' &&
+            strlen(new_working_directory) > 1) {
+            //check for / in the end of new dir e.g. cd proc/ -> proc
+            new_working_directory[strlen(new_working_directory) - 1] = 0;
+        }
+        if (strcmp(new_working_directory, "..") == 0) {
+            for (int i = strlen(working_directory) - 1; i >= 0; i--) {
+                if (working_directory[i] == '/') {
+                    memset(working_directory + i, 0, strlen(working_directory) - i);
+                }
+            }
+            if(strlen(working_directory) == 0) {
+                *working_directory = '/';
+            }
+        }
+        else {
+            if (*new_working_directory != '/') {
+                /*
+                 * cwd /home, cd idokantor -> /home/idokantor
+                 * cwd /, cd home -> /home
+                 */
+                if (strcmp(working_directory, "/") != 0) {
+                    strcat(working_directory, "/");
+                }
+                strcat(working_directory, new_working_directory);
+            }
+            else {
+                //cwd /x/y/z, cd /a/b/c -> /a/b/c
+                strcpy(working_directory, new_working_directory);
+            }
+        }
+        char cd_buf[256];
+        prepare_buffer(cd_buf, sizeof(cd_buf), working_directory, "CWD");
+        //send cwd for first client to print and confirm
         s_send(sock_fd, cd_buf, strlen(cd_buf));
     }
     return 0;
