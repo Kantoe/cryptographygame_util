@@ -17,9 +17,9 @@ int main() {
     }
     char buf [1024];
     prepare_buffer(buf, sizeof(buf),
-        "max 2 clients can connect", "ERR");
+        "max 2 clients can connect\n", "ERR");
     printf("%s\n", buf);
-    printf("%ld",strlen("tlength:60;type:ERR;length:25;data:max 2 clients can connect"));
+    //printf("%ld",strlen("tlength:61;type:ERR;length:25;data:max 2 clients can connect\n"));
     /*printf("%ld",strlen("tlength:40;type:IN;length:7;data:efghijk"));
     printf("%ld",strlen("tlength:40;type:OUT;length:6;data:abc123"));*/
     return 0;

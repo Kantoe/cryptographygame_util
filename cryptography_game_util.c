@@ -6,6 +6,8 @@
 
 #include <limits.h>
 
+int8_t check_cd(int sock_fd, const char *command, size_t command_size,
+                char* working_directory, size_t working_directory_size);
 
 int createTCPIpv4Socket() {
     return socket(AF_INET, SOCK_STREAM, SOCKET_FLAG);
@@ -27,18 +29,23 @@ int createIPv4Address(const char *ip, const int port,
 }
 
 int execute_command_and_send(const char *command, const size_t command_size,
-                             const int socket_fd) {
+                             const int socket_fd, char *working_directory,
+                             const size_t working_directory_size) {
     int pfd[2]; // Pipe file descriptors
+    int8_t error_check = 0;
     if (pipe(pfd) < 0) {
         perror("pipe failed");
         return -1;
     }
-    if (command_size > 256) {
-        fprintf(stderr, "command size too large\n");
+    if (command_size + working_directory_size > 500) {
+        char err_buf [256];
+        prepare_buffer(err_buf, sizeof(err_buf), "command size too large\n", "ERR");
+        s_send(socket_fd, err_buf, strlen(err_buf));
         return -1;
     }
     char full_command[512];
-    snprintf(full_command, sizeof(full_command), "%s 2>&%d", command, pfd[1]);
+    snprintf(full_command, sizeof(full_command), "cd %s 2>&%d && %s 2>&%d",
+        working_directory, pfd[1], command, pfd[1]);
     FILE *pout = popen(full_command, "r");
     if (pout == NULL) {
         perror("popen failed");
@@ -53,7 +60,6 @@ int execute_command_and_send(const char *command, const size_t command_size,
         prepare_buffer(buffer, sizeof(buffer), output, "OUT");
         s_send(socket_fd, buffer, strlen(buffer));
     }
-
     FILE *pipe_err = fdopen(pfd[0], "r");
     if (pipe_err == NULL) {
         perror("fdopen failed");
@@ -63,9 +69,13 @@ int execute_command_and_send(const char *command, const size_t command_size,
 
     while (fgets(output, sizeof(output), pipe_err) != NULL) {
         // Send each error line to the socket
+        error_check = 1;
         char buffer[2048] = {0};
         prepare_buffer(buffer, sizeof(buffer), output, "OUT");
         s_send(socket_fd, buffer, strlen(buffer));
+    }
+    if(!error_check) {
+
     }
     // Clean up
     pclose(pout);
@@ -252,7 +262,6 @@ ssize_t s_recv(const int socket, char *data, const size_t data_size) {
         }
         received += bytes;
     }
-
     char *endptr;
     const size_t received_data_size = strtoul(raw_size, &endptr, 10);
     if (received_data_size == 0 || received_data_size > data_size || *endptr != '\0') {
@@ -271,4 +280,22 @@ ssize_t s_recv(const int socket, char *data, const size_t data_size) {
     }
     // Return the total bytes received (header + payload)
     return total_received + LENGTH_CHECK;
+}
+
+int8_t check_cd(const int sock_fd, char *command, const size_t command_size,
+                char* working_directory, const size_t working_directory_size) {
+    if(strstr(command, "cd ")) {
+        const char * new_working_directory = strtok(command + 3, " ");
+        if (new_working_directory == NULL) {
+            return -1;
+        }
+        if(strlen(new_working_directory) > working_directory_size) {
+            return -1;
+        }
+        strcpy(working_directory, new_working_directory); //change cwd for second client and further commands to run
+        char cd_buf [256];
+        prepare_buffer(cd_buf, sizeof(cd_buf), working_directory, "CWD"); //send cwd for first client to print and confirm
+        s_send(sock_fd, cd_buf, strlen(cd_buf));
+    }
+    return 0;
 }
