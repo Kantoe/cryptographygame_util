@@ -20,7 +20,7 @@ int main() {
  * dont comment too much try to add comments based on how the code is already commented if there are comments missing
  * add more inside functions dont comment too much. a good rule of thumb for comments inside functions is every 5 lines add a comment
  * each prototype comment like this style.
-* /*
+ /*
  * Processes received data from the server based on message type.
  * This function handles three different message types: OUT (output),
  * CMD (commands), and ERR (errors). It parses incoming messages and
@@ -32,4 +32,3 @@ int main() {
  *   length - Buffer containing message length information
  * Returns: None
  */
-
