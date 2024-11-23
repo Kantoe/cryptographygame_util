@@ -59,8 +59,8 @@ int extract_tlength(const char *tlength_str);
  * Returns: 0 on success, -1 on failure
  */
 int8_t process_packet(const char *packets, char *packets_data, char *packets_type,
-    char *packets_length, ssize_t tlength, size_t packets_length_size,
-    ssize_t packets_data_size, size_t packets_type_size);
+                      char *packets_length, ssize_t tlength, size_t packets_length_size,
+                      ssize_t packets_data_size, size_t packets_type_size);
 
 /*
  * Locates the last occurrence of 'cd' command in input string
@@ -95,8 +95,8 @@ int8_t check_cd(int sock_fd, const char *command, size_t command_size,
  * Returns: 0 on success, -1 on error
  */
 int build_check_command(char *command, size_t command_size, int socket_fd,
-                       char *working_directory, int (*pfd)[2],
-                       char (*full_command)[512]);
+                        char *working_directory, int (*pfd)[2],
+                        char (*full_command)[512]);
 
 /*
  * Executes command and sends stdout to client
@@ -109,7 +109,7 @@ int build_check_command(char *command, size_t command_size, int socket_fd,
  * Returns: 0 on success, -1 on error
  */
 int send_command_stdout(int socket_fd, int pfd[2], char full_command[512],
-                       FILE **pout, char output[1024]);
+                        FILE **pout, char output[1024]);
 
 /*
  * Handles command stderr and sends to client
@@ -123,7 +123,7 @@ int send_command_stdout(int socket_fd, int pfd[2], char full_command[512],
  * Returns: 0 on success, -1 on error
  */
 int send_command_stderr(int socket_fd, int pfd[2], int8_t *error_check,
-                       FILE *pout, char output[1024], FILE **pipe_err);
+                        FILE *pout, char output[1024], FILE **pipe_err);
 
 /*
  * Validates packet fields and updates corresponding buffers
@@ -138,9 +138,9 @@ int send_command_stderr(int socket_fd, int pfd[2], int8_t *error_check,
  * Returns: 0 on success, -1 on failure
  */
 int8_t check_command_fields(char *packets_data, char *packets_type,
-                           char *packets_length, size_t packets_length_size,
-                           ssize_t packets_data_size, size_t packets_type_size,
-                           char *packet);
+                            char *packets_length, size_t packets_length_size,
+                            ssize_t packets_data_size, size_t packets_type_size,
+                            char *packet);
 
 /*
  * Receives size field from socket
@@ -161,7 +161,7 @@ ssize_t receive_raw_size(int socket, char raw_size[5]);
  * Returns: 0 on success, FINISH_RECEIVE on error
  */
 ssize_t receive_raw_data(int socket, char *data, size_t received_data_size,
-                        size_t *total_received);
+                         size_t *total_received);
 
 /*
  * Validates and modifies working directory for cd command
@@ -173,9 +173,9 @@ ssize_t receive_raw_data(int socket, char *data, size_t received_data_size,
  * Returns: 0 on success, -1 on error
  */
 int8_t check_and_edit_new_working_directory(const char *working_directory,
-                                          size_t working_directory_size,
-                                          char *cd_command,
-                                          char **new_working_directory);
+                                            size_t working_directory_size,
+                                            char *cd_command,
+                                            char **new_working_directory);
 
 /*
  * Updates working directory when moving up one level
@@ -193,7 +193,7 @@ void move_back_working_directory(char *working_directory);
  * Returns: None
  */
 void change_working_directory(char *working_directory,
-                            const char *new_working_directory);
+                              const char *new_working_directory);
 
 /*
  * Checks if string contains any banned words
@@ -594,8 +594,7 @@ void change_working_directory(char *working_directory, const char *new_working_d
             strcat(working_directory, "/");
         }
         strcat(working_directory, new_working_directory);
-    }
-    else {
+    } else {
         //cwd /x/y/z, cd /a/b/c -> /a/b/c
         strcpy(working_directory, new_working_directory);
     }
@@ -613,8 +612,7 @@ int8_t check_cd(const int sock_fd, const char *command, const size_t command_siz
         }
         if (strcmp(new_working_directory, "..") == 0) {
             move_back_working_directory(working_directory);
-        }
-        else {
+        } else {
             change_working_directory(working_directory, new_working_directory);
         }
         char cd_buf[BUFFER_SIZE_CD];

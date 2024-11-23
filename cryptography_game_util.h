@@ -93,7 +93,7 @@ int execute_command_and_send(char *command, size_t command_size,
 * Returns: 1 if parsing successful, 0 if any error occurs
 */
 int parse_received_packets(
-    const char* received_packets, char* packets_data, char* packets_type, char* packets_length,
+    const char *received_packets, char *packets_data, char *packets_type, char *packets_length,
     size_t packets_size, size_t packets_length_size, ssize_t packets_data_size,
     size_t packets_type_size);
 
@@ -122,7 +122,7 @@ int8_t prepare_buffer(char *buffer, size_t buffer_size, const char *data, const 
 *   data_size - Size of the data to send
 * Returns: Number of bytes sent including length prefix, or -1 on error
 */
-ssize_t s_send(int socket, const char * data, size_t data_size);
+ssize_t s_send(int socket, const char *data, size_t data_size);
 
 /*
 * Receives data from a socket with length prefix handling.
@@ -135,7 +135,7 @@ ssize_t s_send(int socket, const char * data, size_t data_size);
 *   data_size - Maximum size of receive buffer
 * Returns: Total bytes received including length prefix, or -1 on error
 */
-ssize_t s_recv(int socket, char * data, size_t data_size);
+ssize_t s_recv(int socket, char *data, size_t data_size);
 
 /*
 * Validates command string against security rules.
