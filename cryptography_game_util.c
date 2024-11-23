@@ -14,9 +14,7 @@
 #define CHECK_IP 0
 
 /* Constants for buffer sizes and message handling */
-#define NUM_ZERO 10
-#define LENGTH_CHECK 10
-#define FINISH_RECEIVE -2
+#define NUM_ZERO 4
 #define MAX_COMMAND_SIZE 500
 #define MAX_FULL_COMMAND 512
 #define MAX_OUTPUT_BUFFER 1024

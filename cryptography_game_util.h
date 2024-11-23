@@ -12,15 +12,25 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdbool.h>
+#define CHUNK_SIZE 1024
+#define LENGTH_CHECK 4
+#define FINISH_RECEIVE -1
+
+/* Constants for socket configuration */
 #define SOCKET_FLAG 0
 #define NO_IP 0
 #define PORT_RANGE_MIN 0
 #define PORT_RANGE_MAX 65535
 #define CHECK_IP 0
-#define CHUNK_SIZE 1024
+
+
+/* Constants for buffer sizes and message handling */
 #define NUM_ZERO 4
-#define LENGTH_CHECK 4
-#define FINISH_RECEIVE -1
+#define MAX_COMMAND_SIZE 500
+#define MAX_FULL_COMMAND 512
+#define MAX_OUTPUT_BUFFER 1024
+#define MAX_SEND_BUFFER 2048
+#define MAX_CD_BUFFER 256
 
 /* Creates a TCP IPv4 socket.
  * Returns: The file descriptor for the created socket, or -1 on failure.
