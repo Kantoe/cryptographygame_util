@@ -11,6 +11,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <stdbool.h>
 #define SOCKET_FLAG 0
 #define NO_IP 0
 #define PORT_RANGE_MIN 0
@@ -77,5 +78,11 @@ ssize_t s_send(int socket, const char * data, size_t data_size);
  */
 
 ssize_t s_recv(int socket, char * data, size_t data_size);
+
+/*
+ *
+ */
+
+int check_command_data(const char *data);
 
 #endif

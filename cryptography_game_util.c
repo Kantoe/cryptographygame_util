@@ -6,6 +6,82 @@
 
 #include <limits.h>
 
+/* Constants for socket configuration */
+#define SOCKET_FLAG 0
+#define NO_IP 0
+#define PORT_RANGE_MIN 0
+#define PORT_RANGE_MAX 65535
+#define CHECK_IP 0
+
+/* Constants for buffer sizes and message handling */
+#define NUM_ZERO 10
+#define LENGTH_CHECK 10
+#define FINISH_RECEIVE -2
+#define MAX_COMMAND_SIZE 500
+#define MAX_FULL_COMMAND 512
+#define MAX_OUTPUT_BUFFER 1024
+#define MAX_SEND_BUFFER 2048
+#define MAX_CD_BUFFER 256
+
+//globals
+const char *banned_words[] = {"etc", "proc"};
+const char *allowed_commands[] = {"ls", "cat", "pwd", "date", "cd"};
+
+// prototypes
+
+/*
+ * Calculates the number of decimal places in an integer
+ * Parameters:
+ *   n - The integer to analyze
+ * Returns: Number of decimal places
+ */
+int numPlaces(int n);
+
+/*
+ * Extracts the total length value from a tlength string
+ * Parameters:
+ *   tlength_str - String containing the tlength field
+ * Returns: Extracted length value or -1 on error
+ */
+int extract_tlength(const char *tlength_str);
+
+/*
+ * Processes a single packet by extracting its fields
+ * Parameters:
+ *   packets - Raw packet data
+ *   packets_data - Buffer for processed data
+ *   packets_type - Buffer for packet types
+ *   packets_length - Buffer for packet lengths
+ *   tlength - Total length of packet
+ *   packets_length_size - Size of length buffer
+ *   packets_data_size - Size of data buffer
+ *   packets_type_size - Size of type buffer
+ * Returns: 0 on success, -1 on failure
+ */
+int8_t process_packet(
+    const char *packets, char *packets_data, char *packets_type,
+    char *packets_length, ssize_t tlength,
+    size_t packets_length_size, ssize_t packets_data_size,
+    size_t packets_type_size);
+
+/*
+ * Finds the last occurrence of 'cd' command in input
+ * Parameters:
+ *   command - The command string to search
+ * Returns: Pointer to last 'cd' occurrence or NULL
+ */
+char *find_last_cd(const char *command);
+
+/*
+ * Processes cd command and updates working directory
+ * Parameters:
+ *   sock_fd - Socket file descriptor
+ *   command - Command string
+ *   command_size - Size of command buffer
+ *   working_directory - Current working directory
+ *   working_directory_size - Size of directory buffer
+ * Returns: 0 on success, -1 on failure
+ */
 int8_t check_cd(int sock_fd, const char *command, size_t command_size,
                 char *working_directory, size_t working_directory_size);
 
@@ -339,4 +415,59 @@ int8_t check_cd(const int sock_fd, const char *command, const size_t command_siz
         s_send(sock_fd, cd_buf, strlen(cd_buf));
     }
     return 0;
+}
+
+
+// Helper function to check if the string contains any banned words
+bool contains_banned_word(const char *data) {
+    for (int i = 0; i < sizeof(banned_words) / sizeof(banned_words[0]); i++) {
+        if (strstr(data, banned_words[i]) != NULL) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Helper function to check if the command is allowed
+bool is_allowed_command(const char *cmd) {
+    for (int i = 0; i < sizeof(allowed_commands) / sizeof(allowed_commands[0]); i++) {
+        if (strncmp(cmd, allowed_commands[i], strlen(allowed_commands[i])) == 0) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Main function to check the command string
+int check_command_data(const char *data) {
+    char *data_copy = strdup(data);
+    char *token = strtok(data_copy, "&&");
+
+    while (token != NULL) {
+        // Trim leading and trailing whitespaces
+        while (*token == ' ') token++;
+        char *end = token + strlen(token) - 1;
+        while (end > token && *end == ' ') end--;
+        *(end + 1) = '\0';
+
+        // Check for banned words
+        if (contains_banned_word(token)) {
+            free(data_copy);
+            return 0;  // Banned word found, return 0
+        }
+
+        // Check if the command is allowed
+        char cmd[1024] = {0};
+        sscanf(token, "%s", cmd);  // Extract the command (first word)
+        if (!is_allowed_command(cmd)) {
+            free(data_copy);
+            return 0;  // Command not allowed, return 0
+        }
+
+        // Get the next command
+        token = strtok(NULL, "&&");
+    }
+
+    free(data_copy);
+    return 1;  // Data is valid
 }
