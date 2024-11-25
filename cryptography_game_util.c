@@ -297,20 +297,17 @@ int execute_command_and_send(char *command, const size_t command_size,
     int pfd[2];
     int8_t error_check = 0;
     char full_command[BUFFER_SIZE_FULL_CMD];
-    const int command_build_check = build_check_command(command, command_size,
-                                                        socket_fd, working_directory, &pfd, &full_command);
-    if (command_build_check == -1) {
+    s_send(socket_fd ,EMPTY_DATA, strlen(EMPTY_DATA));
+    if (build_check_command(command, command_size, socket_fd, working_directory, &pfd, &full_command) == -1) {
         return -1;
     }
     FILE *pout;
     char output[BUFFER_SIZE_OUTPUT];
-    const int stdout_check = send_command_stdout(socket_fd, pfd, full_command, &pout, output);
-    if (stdout_check == -1) {
+    if (send_command_stdout(socket_fd, pfd, full_command, &pout, output) == -1) {
         return -1;
     }
     FILE *pipe_err;
-    const int stderr_check = send_command_stderr(socket_fd, pfd, &error_check, pout, output, &pipe_err);
-    if (stderr_check == -1) {
+    if (send_command_stderr(socket_fd, pfd, &error_check, pout, output, &pipe_err) == -1) {
         return -1;
     }
     if (!error_check) {

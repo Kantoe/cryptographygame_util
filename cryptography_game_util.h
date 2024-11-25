@@ -26,6 +26,8 @@
 #define BASE_10 10
 #define LENGTH_CHECK 4
 #define NUM_ZERO 4
+#define EMPTY_DATA "tlength:34;type:OUT;length:0;data:"
+
 
 /* Constants for socket configuration */
 
