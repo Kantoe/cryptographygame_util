@@ -574,6 +574,7 @@ void move_back_working_directory(char *working_directory) {
     for (int i = strlen(working_directory) - 1; i >= 0; i--) {
         if (working_directory[i] == '/') {
             memset(working_directory + i, 0, strlen(working_directory) - i);
+            break;
         }
     }
     if (strlen(working_directory) == 0) {
