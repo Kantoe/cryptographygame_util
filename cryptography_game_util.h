@@ -19,6 +19,7 @@
 #define BUFFER_SIZE_OUTPUT 1024
 #define BUFFER_SIZE_SEND 2048
 #define BUFFER_SIZE_CD 256
+#define ERR_BUFFER_SIZE 256
 
 /* Message processing constants */
 #define FINISH_RECEIVE -1
@@ -28,14 +29,20 @@
 #define NUM_ZERO 4
 #define EMPTY_DATA "tlength:34;type:OUT;length:0;data:"
 
-
 /* Constants for socket configuration */
-
 #define SOCKET_FLAG 0
 #define NO_IP 0
 #define PORT_RANGE_MIN 0
 #define PORT_RANGE_MAX 65535
 #define CHECK_IP 0
+
+/* Constants for errors */
+#define PIPE_ERR_CHECK 0
+#define GENERAL_ERROR -1
+#define STATUS_OKAY 0
+
+#define PIPE_OUT 1
+#define PIPE_ERR 0
 
 /* Creates a TCP IPv4 socket.
  * Returns: The file descriptor for the created socket, or -1 on failure.

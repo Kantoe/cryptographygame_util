@@ -241,45 +241,45 @@ int createIPv4Address(const char *ip, const int port,
 
 int build_check_command(char *command, const size_t command_size, const int socket_fd, char *working_directory,
                         int (*pfd)[2], char (*full_command)[512]) {
-    if (pipe(*pfd) < 0) {
+    if (pipe(*pfd) < PIPE_ERR_CHECK) {
         perror("pipe failed");
-        return -1;
+        return GENERAL_ERROR;
     }
     if (command_size + strlen(working_directory) > BUFFER_SIZE_CMD_MAX) {
-        char err_buf[256];
+        char err_buf[ERR_BUFFER_SIZE];
         prepare_buffer(err_buf, sizeof(err_buf), "command size too large\n", "ERR");
         s_send(socket_fd, err_buf, strlen(err_buf));
-        return -1;
+        return GENERAL_ERROR;
     }
     snprintf(*full_command, sizeof(*full_command), "cd %s 2>&%d && %s 2>&%d",
              working_directory, (*pfd)[1], command, (*pfd)[1]);
-    return 0;
+    return STATUS_OKAY;
 }
 
 int send_command_stdout(const int socket_fd, int pfd[2], char full_command[512], FILE **pout, char output[1024]) {
     *pout = popen(full_command, "r");
     if (*pout == NULL) {
         perror("popen failed");
-        close(pfd[1]);
-        return -1;
+        close(pfd[PIPE_OUT]);
+        return GENERAL_ERROR;
     }
-    close(pfd[1]);
+    close(pfd[PIPE_OUT]);
     while (fgets(output, BUFFER_SIZE_OUTPUT, *pout) != NULL) {
         // Send each line to the socket
         char buffer[BUFFER_SIZE_SEND] = {0};
         prepare_buffer(buffer, sizeof(buffer), output, "OUT");
         s_send(socket_fd, buffer, strlen(buffer));
     }
-    return 0;
+    return STATUS_OKAY;
 }
 
 int send_command_stderr(const int socket_fd, int pfd[2], int8_t *error_check, FILE *pout, char output[1024],
                         FILE **pipe_err) {
-    *pipe_err = fdopen(pfd[0], "r");
+    *pipe_err = fdopen(pfd[PIPE_ERR], "r");
     if (*pipe_err == NULL) {
         perror("fdopen failed");
         pclose(pout);
-        return -1;
+        return GENERAL_ERROR;
     }
     while (fgets(output, BUFFER_SIZE_OUTPUT, *pipe_err) != NULL) {
         // Send each error line to the socket
@@ -288,7 +288,7 @@ int send_command_stderr(const int socket_fd, int pfd[2], int8_t *error_check, FI
         prepare_buffer(buffer, sizeof(buffer), output, "OUT");
         s_send(socket_fd, buffer, strlen(buffer));
     }
-    return 0;
+    return STATUS_OKAY;
 }
 
 int execute_command_and_send(char *command, const size_t command_size,
@@ -299,16 +299,16 @@ int execute_command_and_send(char *command, const size_t command_size,
     char full_command[BUFFER_SIZE_FULL_CMD];
     s_send(socket_fd ,EMPTY_DATA, strlen(EMPTY_DATA));
     if (build_check_command(command, command_size, socket_fd, working_directory, &pfd, &full_command) == -1) {
-        return -1;
+        return GENERAL_ERROR;
     }
     FILE *pout;
     char output[BUFFER_SIZE_OUTPUT];
     if (send_command_stdout(socket_fd, pfd, full_command, &pout, output) == -1) {
-        return -1;
+        return GENERAL_ERROR;
     }
     FILE *pipe_err;
     if (send_command_stderr(socket_fd, pfd, &error_check, pout, output, &pipe_err) == -1) {
-        return -1;
+        return GENERAL_ERROR;
     }
     if (!error_check) {
         check_cd(socket_fd, command, command_size, working_directory, working_directory_size);
@@ -316,7 +316,7 @@ int execute_command_and_send(char *command, const size_t command_size,
     // Clean up
     pclose(pout);
     fclose(pipe_err);
-    return 0;
+    return STATUS_OKAY;
 }
 
 
