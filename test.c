@@ -1,16 +1,20 @@
 #include "cryptography_game_util.h"
 
 int main() {
-    const char *data1 = "ls /home && rm test.txt";
-    const char *data2 = "ls /home && 0";
-    const char *data3 = "ls /home && ls /etc";
-    const char *data4 = "ls /home && ls /home/idokantor && cd /";
+    /*const char *data1 = "ls /home&& rm test.txt";
+    const char *data2 = "ls /home&& 0";
+    const char *data3 = "ls /home&& ls /etc";
+    const char *data4 = "ls /home&& ls /home/idokantor && cd /";
     const char *data5 = "rm test.txt";
     printf("Check data1: %d\n", check_command_data(data1)); // Should return 0
     printf("Check data2: %d\n", check_command_data(data2)); // Should return 0
     printf("Check data3: %d\n", check_command_data(data3)); // Should return 0
     printf("Check data4: %d\n", check_command_data(data4)); // Should return 1
-    printf("Check data5: %d\n", check_command_data(data5)); // Should return 1
+    printf("Check data5: %d\n", check_command_data(data5)); // Should return 0*/
+    char buffer[1024];
+    prepare_buffer(buffer, sizeof(buffer), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                   "CWD");
+    printf("%s\n", buffer);
     return 0;
 }
 

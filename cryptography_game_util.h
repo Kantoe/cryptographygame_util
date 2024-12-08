@@ -18,7 +18,7 @@
 #define BUFFER_SIZE_FULL_CMD 512
 #define BUFFER_SIZE_OUTPUT 1024
 #define BUFFER_SIZE_SEND 2048
-#define BUFFER_SIZE_CD 256
+#define BUFFER_SIZE_CD 512
 #define ERR_BUFFER_SIZE 256
 
 /* Message processing constants */
@@ -43,11 +43,31 @@
 
 #define PIPE_OUT 1
 #define PIPE_ERR 0
+#define BASE_TEN 10               // The base for dividing numbers
+#define SINGLE_DIGIT_LIMIT 9      // Largest single-digit number
+#define HANDLE_NEGATIVE(n) ((n) < 0 ? -(n) : (n))  // Convert to absolute value
+#define HANDLE_ZERO(n) ((n) == 0 ? INT_MAX : (n))  // Handle special case for zero
+
+#define SKIP_TLENGTH 8
+#define NULL_CHAR_LEN 1
+#define TYPE_LEN 5
+#define LENGTH_LEN 7
+#define DATA_LEN 5
+#define NULL_CHAR 0
+#define TLENGTH_CHECK 0
+#define SEND_FLAG 0
+#define RECEIVE_FLAG 0
+#define CHECK_RECEIVE 0
+#define NEXT_CD 1
+#define CD_AND_SPACE_LEN 3
+#define DIR_LENGTH_CHECK 1
+#define DIR_EMPTY 0
+#define BACKSPACE 1
+#define CMP_EQUAL 0
 
 /* Creates a TCP IPv4 socket.
  * Returns: The file descriptor for the created socket, or -1 on failure.
  */
-
 int createTCPIpv4Socket();
 
 /* Initializes an IPv4 address structure with the given IP and port.
@@ -65,7 +85,6 @@ int createTCPIpv4Socket();
  * IP address to network format;
  * - 0 if the port is outside the valid range.
  */
-
 int createIPv4Address(const char *ip, int port, struct sockaddr_in *address);
 
 /*
@@ -102,9 +121,9 @@ int execute_command_and_send(char *command, size_t command_size,
 * Returns: 1 if parsing successful, 0 if any error occurs
 */
 int parse_received_packets(
-    const char *received_packets, char *packets_data, char *packets_type, char *packets_length,
-    size_t packets_size, size_t packets_length_size, ssize_t packets_data_size,
-    size_t packets_type_size);
+ const char *received_packets, char *packets_data, char *packets_type, char *packets_length,
+ size_t packets_size, size_t packets_length_size, ssize_t packets_data_size,
+ size_t packets_type_size);
 
 /*
 * Prepares a network message buffer with formatted data.

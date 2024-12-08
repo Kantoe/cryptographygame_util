@@ -4,10 +4,11 @@
  */
 #include "cryptography_game_util.h"
 
+#include <ctype.h>
 #include <limits.h>
 
 //globals
-const char *banned_words[] = {"etc", "proc"};
+const char *banned_words[] = {"etc", "proc", "<", ">", "sudo"};
 const char *allowed_commands[] = {"ls", "cat", "pwd", "date", "cd"};
 
 // prototypes
@@ -80,7 +81,7 @@ char *find_last_cd(const char *command);
  *   working_directory_size - Size of directory buffer
  * Returns: 0 on success, -1 on failure
  */
-int8_t check_cd(int sock_fd, const char *command, size_t command_size,
+int8_t check_cd(int sock_fd, const char *command,
                 char *working_directory, size_t working_directory_size);
 
 /*
@@ -252,7 +253,7 @@ int build_check_command(char *command, const size_t command_size, const int sock
         return GENERAL_ERROR;
     }
     snprintf(*full_command, sizeof(*full_command), "cd %s 2>&%d && %s 2>&%d",
-             working_directory, (*pfd)[1], command, (*pfd)[1]);
+             working_directory, (*pfd)[PIPE_OUT], command, (*pfd)[PIPE_OUT]);
     return STATUS_OKAY;
 }
 
@@ -297,21 +298,22 @@ int execute_command_and_send(char *command, const size_t command_size,
     int pfd[2];
     int8_t error_check = 0;
     char full_command[BUFFER_SIZE_FULL_CMD];
-    s_send(socket_fd ,EMPTY_DATA, strlen(EMPTY_DATA));
-    if (build_check_command(command, command_size, socket_fd, working_directory, &pfd, &full_command) == -1) {
+    s_send(socket_fd,EMPTY_DATA, strlen(EMPTY_DATA));
+    if (build_check_command(command, command_size, socket_fd, working_directory, &pfd, &full_command) ==
+        GENERAL_ERROR) {
         return GENERAL_ERROR;
     }
     FILE *pout;
     char output[BUFFER_SIZE_OUTPUT];
-    if (send_command_stdout(socket_fd, pfd, full_command, &pout, output) == -1) {
+    if (send_command_stdout(socket_fd, pfd, full_command, &pout, output) == GENERAL_ERROR) {
         return GENERAL_ERROR;
     }
     FILE *pipe_err;
-    if (send_command_stderr(socket_fd, pfd, &error_check, pout, output, &pipe_err) == -1) {
+    if (send_command_stderr(socket_fd, pfd, &error_check, pout, output, &pipe_err) == GENERAL_ERROR) {
         return GENERAL_ERROR;
     }
     if (!error_check) {
-        check_cd(socket_fd, command, command_size, working_directory, working_directory_size);
+        check_cd(socket_fd, command, working_directory, working_directory_size);
     }
     // Clean up
     pclose(pout);
@@ -321,29 +323,31 @@ int execute_command_and_send(char *command, const size_t command_size,
 
 
 int numPlaces(int n) {
-    int r = 1;
-    if (n < 0) n = (n == 0) ? INT_MAX : -n;
-    while (n > 9) {
-        n /= 10;
+    int r = 1; // Start with the minimum count of places
+    if (n < 0) n = HANDLE_ZERO(HANDLE_NEGATIVE(n)); // Handle negative numbers and zero
+    while (n > SINGLE_DIGIT_LIMIT) {
+        // Loop until n is a single-digit number
+        n /= BASE_TEN; // Divide by the base (10)
         r++;
     }
     return r;
 }
 
+
 int extract_tlength(const char *tlength_str) {
     // Skip "tlength:"
-    const char *number_start = tlength_str + 8;
+    const char *number_start = tlength_str + SKIP_TLENGTH;
     char *end_ptr = strchr(number_start, ';');
     if (!end_ptr) {
         // If no delimiter found, it's an invalid format
         fprintf(stderr, "Invalid tlength format\n");
-        return -1;
+        return GENERAL_ERROR;
     }
     // Create a temporary buffer to store the number
     const size_t length = end_ptr - number_start;
-    char temp[length + 1];
+    char temp[length + NULL_CHAR_LEN];
     strncpy(temp, number_start, length);
-    temp[length] = 0;
+    temp[length] = NULL_CHAR;
     // Convert to integer
     return atoi(temp);
 }
@@ -360,31 +364,31 @@ int8_t check_command_fields(char *packets_data, char *packets_type, char *packet
     const char *data_length = strtok(NULL, ";");
     const char *data = strtok(NULL, ";");
     if (type && data_length && data) {
-        if (strncmp(type, "type:", 5) == 0 && strncmp(data_length, "length:", 7)
-            == 0 && atoi(data_length + 7) == strlen(data + 5)) {
+        if (strncmp(type, "type:", TYPE_LEN) == STATUS_OKAY && strncmp(data_length, "length:", LENGTH_LEN)
+            == STATUS_OKAY && atoi(data_length + LENGTH_LEN) == strlen(data + DATA_LEN)) {
             if (packets_data_size >= strlen(packets_data) + strlen(data)) {
-                strcat(packets_data, data + 5);
+                strcat(packets_data, data + DATA_LEN);
             }
-            if (packets_type_size >= strlen(packets_type) + strlen(type) + 1) {
-                strcat(packets_type, type + 5);
+            if (packets_type_size >= strlen(packets_type) + strlen(type) + NULL_CHAR_LEN) {
+                strcat(packets_type, type + TYPE_LEN);
                 strcat(packets_type, ";");
             }
             if (packets_length_size >= strlen(packets_length) + strlen(
-                    data_length) + 1) {
-                strcat(packets_length, data_length + 7);
+                    data_length) + NULL_CHAR_LEN) {
+                strcat(packets_length, data_length + LENGTH_LEN);
                 strcat(packets_length, ";");
             }
         } else {
             fprintf(stderr, "Invalid packet fields\n");
             free(packet);
-            return -1;
+            return GENERAL_ERROR;
         }
     } else {
         fprintf(stderr, "Failed to parse packet fields\n");
         free(packet);
-        return -1;
+        return GENERAL_ERROR;
     }
-    return 0;
+    return STATUS_OKAY;
 }
 
 int8_t process_packet(
@@ -398,14 +402,16 @@ int8_t process_packet(
     char *packet = strndup(packets + rest_of_length, tlength - rest_of_length);
     if (!packet) {
         perror("Failed to allocate memory for buffer");
-        return -1;
+        return GENERAL_ERROR;
     }
     // Step 3: Parse the fields using the delimiter
     const int8_t check_fields = check_command_fields(
         packets_data, packets_type,
         packets_length, packets_length_size,
         packets_data_size, packets_type_size, packet);
-    free(packet);
+    if (check_fields != GENERAL_ERROR) {
+        free(packet);
+    }
     return check_fields;
 }
 
@@ -420,24 +426,24 @@ int parse_received_packets(
     while (*current && current_length < packets_size) {
         const char *tlength_str = strstr(current, "tlength:");
         if (tlength_str == NULL) {
-            return 0;
+            return false;
         }
         const ssize_t tlength = extract_tlength(tlength_str);
-        if (tlength <= 0) {
+        if (tlength <= TLENGTH_CHECK) {
             printf("tlength is less than zero\n");
-            return 0;
+            return false;
         }
         if (strlen(current) < tlength) {
             printf("tlength is bigger than current length\n");
-            return 0;
+            return false;
         }
         const int8_t check = process_packet(current, packets_data, packets_type,
                                             packets_length, tlength,
                                             packets_length_size,
                                             packets_data_size,
                                             packets_type_size);
-        if (check == -1) {
-            return 0;
+        if (check == GENERAL_ERROR) {
+            return false;
         }
         current += tlength;
         current_length += tlength;
@@ -460,26 +466,38 @@ int8_t prepare_buffer(
     if (formatted_length >= buffer_size) {
         fprintf(stderr,
                 "Buffer too small to store formatted message.\n");
-        return 0;
+        return false;
     }
     // Calculate tlength as the length of the formatted message (including "tlength:" part)
     const int message_length = snprintf(NULL, 0,
                                         "tlength:%d;type:%s;length:%d;data:%s",
                                         formatted_length, type, data_length,
                                         data);
-
+    if (message_length >= buffer_size) {
+        fprintf(stderr,
+                "Buffer too small to store formatted message.\n");
+        return false;
+    }
     // Format the final message with correct tlength
+    const int final_size = snprintf(buffer, buffer_size,
+                                    "tlength:%d;type:%s;length:%d;data:%s",
+                                    message_length, type, data_length, data);
+    if (final_size >= buffer_size) {
+        fprintf(stderr,
+                "Buffer too small to store formatted message.\n");
+        return false;
+    }
     snprintf(buffer, buffer_size,
              "tlength:%d;type:%s;length:%d;data:%s",
-             message_length, type, data_length, data);
-    return 1;
+             final_size, type, data_length, data);
+    return true;
 }
 
 ssize_t s_send(const int socket, const char *data, const size_t data_size) {
-    char length_string[NUM_ZERO + 1] = {0}; // +1 for null-terminator
-    const size_t buf_size = NUM_ZERO + data_size + 1;
+    char length_string[NUM_ZERO + NULL_CHAR_LEN] = {0}; // +1 for null-terminator
+    const size_t buf_size = NUM_ZERO + data_size + NULL_CHAR_LEN;
     char buffer[buf_size];
-    memset(buffer, 0, buf_size);
+    memset(buffer, NULL_CHAR, buf_size);
     // Generate a zero-padded length string
     snprintf(length_string, sizeof(length_string), "%0*u", NUM_ZERO,
              (unsigned int) data_size);
@@ -489,54 +507,55 @@ ssize_t s_send(const int socket, const char *data, const size_t data_size) {
     memcpy(buffer + NUM_ZERO, data, data_size); // Copy the data
 
     // Send the buffer (length + data)
-    return send(socket, buffer, NUM_ZERO + data_size, 0);
+    return send(socket, buffer, NUM_ZERO + data_size, RECEIVE_FLAG);
 }
 
 ssize_t receive_raw_size(const int socket, char raw_size[5]) {
+    // raw size 4 + 1 null char
     size_t received = 0;
     // Step 1: Receive the size header
     while (received < LENGTH_CHECK) {
         const ssize_t bytes = recv(socket, raw_size + received,
-                                   LENGTH_CHECK - received, 0);
-        if (bytes <= 0) {
+                                   LENGTH_CHECK - received, RECEIVE_FLAG);
+        if (bytes <= CHECK_RECEIVE) {
             // Handle errors or connection closure
             return FINISH_RECEIVE;
         }
         received += bytes;
     }
-    return 0;
+    return STATUS_OKAY;
 }
 
 ssize_t receive_raw_data(const int socket, char *data, const size_t received_data_size, size_t *total_received) {
     *total_received = 0;
     while (*total_received < received_data_size) {
         const ssize_t bytes = recv(socket, data + *total_received,
-                                   received_data_size - *total_received, 0);
-        if (bytes <= 0) {
+                                   received_data_size - *total_received, RECEIVE_FLAG);
+        if (bytes <= CHECK_RECEIVE) {
             // Handle errors or connection closure
             return FINISH_RECEIVE;
         }
         *total_received += bytes;
     }
-    return 0;
+    return STATUS_OKAY;
 }
 
 ssize_t s_recv(const int socket, char *data, const size_t data_size) {
-    char raw_size[LENGTH_CHECK + 1] = {0};
+    char raw_size[LENGTH_CHECK + NULL_CHAR_LEN] = {0};
     // Buffer for the size header (+1 for null-terminator)
     const ssize_t raw_size_check = receive_raw_size(socket, raw_size);
-    if (raw_size_check == -1) {
+    if (raw_size_check == GENERAL_ERROR) {
         return FINISH_RECEIVE;
     }
     char *endptr;
     const size_t received_data_size = strtoul(raw_size, &endptr, BASE_10);
-    if (received_data_size == 0 || received_data_size > data_size || *endptr != '\0') {
-        return -1;
+    if (received_data_size == CHECK_RECEIVE || received_data_size > data_size || *endptr != '\0') {
+        return GENERAL_ERROR;
     }
     // Step 2: Receive the payload
     size_t total_received;
     const ssize_t raw_data_check = receive_raw_data(socket, data, received_data_size, &total_received);
-    if (raw_data_check == -1) {
+    if (raw_data_check == GENERAL_ERROR) {
         return FINISH_RECEIVE;
     }
     // Return the total bytes received (header + payload)
@@ -548,79 +567,100 @@ char *find_last_cd(const char *command) {
     char *current_cd = strstr(command, "cd "); // Start searching for the first occurrence
     while (current_cd != NULL) {
         last_cd = current_cd; // Update the last found pointer
-        current_cd = strstr(current_cd + 1, "cd "); // Search for the next occurrence
+        current_cd = strstr(current_cd + NEXT_CD, "cd "); // Search for the next occurrence
     }
     return last_cd; // Return the last occurrence or NULL if none found
 }
 
-int8_t check_and_edit_new_working_directory(const char *working_directory, const size_t working_directory_size,
-                                            char *cd_command, char **new_working_directory) {
-    *new_working_directory = strtok(cd_command + 3, " ");
-    if (*new_working_directory == NULL) {
-        return -1;
-    }
-    if (strlen(*new_working_directory) + strlen(working_directory) + 1 > working_directory_size) {
-        return -1;
-    }
-    if ((*new_working_directory)[strlen(*new_working_directory) - 1] == '/' &&
-        strlen(*new_working_directory) > 1) {
-        //check for / in the end of new dir e.g. cd proc/ -> proc
-        (*new_working_directory)[strlen(*new_working_directory) - 1] = 0;
-    }
-    return 0;
+// Function to check if a character is valid in a Linux path
+int is_valid_path_char(const char c) {
+    // Valid path characters: alphanumeric, '.', '-', '_', '/', and '~'
+    return isalnum(c) || c == '.' || c == '-' || c == '_' || c == '/' || c == '~';
 }
 
-void move_back_working_directory(char *working_directory) {
-    for (int i = strlen(working_directory) - 1; i >= 0; i--) {
-        if (working_directory[i] == '/') {
-            memset(working_directory + i, 0, strlen(working_directory) - i);
+// Function to extract the valid portion of a "cd" command
+void extract_valid_cd_command(char *cd_command, const size_t max_len) {
+    // Check if the command starts with "cd "
+    if (strncmp(cd_command, "cd ", CD_AND_SPACE_LEN) != 0) {
+        return; // Not a cd command, do nothing
+    }
+
+    // Find the first invalid character, starting after "cd "
+    for (size_t i = CD_AND_SPACE_LEN; i < max_len; i++) {
+        if (!is_valid_path_char(cd_command[i])) {
+            cd_command[i] = '\0';
             break;
         }
     }
-    if (strlen(working_directory) == 0) {
-        *working_directory = '/';
-    }
 }
 
-void change_working_directory(char *working_directory, const char *new_working_directory) {
-    if (*new_working_directory != '/') {
-        /*
-                 * cwd /home, cd idokantor -> /home/idokantor
-                 * cwd /, cd home -> /home
-                 */
-        if (strcmp(working_directory, "/") != 0) {
-            strcat(working_directory, "/");
-        }
-        strcat(working_directory, new_working_directory);
-    } else {
-        //cwd /x/y/z, cd /a/b/c -> /a/b/c
-        strcpy(working_directory, new_working_directory);
+int8_t get_cd_command(const char *command, char **cd_command) {
+    *cd_command = find_last_cd(command);
+    if (*cd_command == NULL) {
+        return STATUS_OKAY; // No "cd" command found, nothing to do
     }
+    // Extract the valid portion of the "cd" command
+    extract_valid_cd_command(*cd_command, strlen(*cd_command));
+    // If no valid path was extracted, return an error
+    if (strlen(*cd_command) == 0) {
+        fprintf(stderr, "Invalid cd command\n");
+        return GENERAL_ERROR;
+    }
+    return true;
 }
 
-int8_t check_cd(const int sock_fd, const char *command, const size_t command_size,
+int8_t build_and_execute_cd(char *working_directory, char *cd_command, char (*output)[512]) {
+    // Prepare the command to execute in a subshell
+    char shell_command[BUFFER_SIZE_CD];
+    snprintf(shell_command, sizeof(shell_command), "cd %s && %s && pwd", working_directory, cd_command);
+    // Open a pipe to execute the shell command
+    FILE *pipe = popen(shell_command, "r");
+    if (pipe == NULL) {
+        perror("popen failed");
+        return GENERAL_ERROR;
+    }
+    if (fgets(*output, sizeof(*output), pipe) == NULL) {
+        pclose(pipe);
+        fprintf(stderr, "Failed to read from pipe\n");
+        return GENERAL_ERROR;
+    }
+    pclose(pipe);
+    return true;
+}
+
+int8_t check_cd(const int sock_fd, const char *command,
                 char *working_directory, const size_t working_directory_size) {
-    char *cd_command = find_last_cd(command);
-    if (cd_command != NULL) {
-        char *new_working_directory;
-        const int8_t new_wd_check = check_and_edit_new_working_directory(
-            working_directory, working_directory_size, cd_command, &new_working_directory);
-        if (new_wd_check == -1) {
-            return -1;
-        }
-        if (strcmp(new_working_directory, "..") == 0) {
-            move_back_working_directory(working_directory);
-        } else {
-            change_working_directory(working_directory, new_working_directory);
-        }
-        char cd_buf[BUFFER_SIZE_CD];
-        prepare_buffer(cd_buf, sizeof(cd_buf), working_directory, "CWD");
-        //send cwd for first client to print and confirm
-        s_send(sock_fd, cd_buf, strlen(cd_buf));
+    char *cd_command;
+    if (get_cd_command(command, &cd_command) != true) {
+        return GENERAL_ERROR;
     }
-    return 0;
+    char output[512];
+    if (build_and_execute_cd(working_directory, cd_command, &output) != true) {
+        return GENERAL_ERROR;
+    }
+    // Remove the trailing newline from the output
+    const size_t len = strlen(output);
+    if (len > 0 && output[len - 1] == '\n') {
+        output[len - 1] = '\0';
+    }
+    // Ensure the output fits into the working_directory buffer
+    if (strlen(output) >= working_directory_size) {
+        fprintf(stderr, "Working directory path is too long\n");
+        return GENERAL_ERROR;
+    }
+    // Update the working directory
+    memset(working_directory, NULL_CHAR, working_directory_size);
+    snprintf(working_directory, working_directory_size, "%s", output);
+    // Prepare the buffer to send to the client
+    char cd_buf[BUFFER_SIZE_CD];
+    prepare_buffer(cd_buf, sizeof(cd_buf), working_directory, "CWD");
+    // Send the updated working directory to the client
+    if (s_send(sock_fd, cd_buf, strlen(cd_buf)) < 0) {
+        perror("s_send failed");
+        return GENERAL_ERROR;
+    }
+    return STATUS_OKAY;
 }
-
 
 // Helper function to check if the string contains any banned words
 bool contains_banned_word(const char *data) {
@@ -646,20 +686,17 @@ bool is_allowed_command(const char *cmd) {
 int check_command_data(const char *data) {
     char *data_copy = strdup(data);
     char *token = strtok(data_copy, "&&");
-
     while (token != NULL) {
         // Trim leading and trailing whitespaces
         while (*token == ' ') token++;
         char *end = token + strlen(token) - 1;
         while (end > token && *end == ' ') end--;
-        *(end + 1) = '\0';
-
+        *(end + 1) = NULL_CHAR;
         // Check for banned words
         if (contains_banned_word(token)) {
             free(data_copy);
             return 0; // Banned word found, return 0
         }
-
         // Check if the command is allowed
         char cmd[BUFFER_SIZE_OUTPUT] = {0};
         sscanf(token, "%s", cmd); // Extract the command (first word)
@@ -667,11 +704,9 @@ int check_command_data(const char *data) {
             free(data_copy);
             return 0; // Command not allowed, return 0
         }
-
         // Get the next command
         token = strtok(NULL, "&&");
     }
-
     free(data_copy);
     return 1; // Data is valid
-}
+} //check for | delimiter as well
