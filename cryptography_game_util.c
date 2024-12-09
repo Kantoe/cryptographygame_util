@@ -648,7 +648,7 @@ int8_t check_cd(const int sock_fd, const char *command,
     // Remove the trailing newline from the output
     const size_t len = strlen(output);
     if (len > 0 && output[len - 1] == '\n') {
-        output[len - 1] = '\0';
+        output[len - 1] = NULL_CHAR;
     }
     // Ensure the output fits into the working_directory buffer
     if (strlen(output) >= working_directory_size) {
