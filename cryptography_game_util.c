@@ -610,21 +610,28 @@ int8_t get_cd_command(const char *command, char **cd_command) {
 }
 
 int8_t build_and_execute_cd(char *working_directory, char *cd_command, char (*output)[512]) {
+    int pfd[2];
+    if (pipe(pfd) < PIPE_ERR_CHECK) {
+        perror("pipe failed");
+        return GENERAL_ERROR;
+    }
     // Prepare the command to execute in a subshell
     char shell_command[BUFFER_SIZE_CD];
-    snprintf(shell_command, sizeof(shell_command), "cd %s && %s && pwd", working_directory, cd_command);
-    // Open a pipe to execute the shell command
-    FILE *pipe = popen(shell_command, "r");
-    if (pipe == NULL) {
+    snprintf(shell_command, sizeof(shell_command), "cd %s && %s 2>&%d && pwd", working_directory, cd_command,
+             pfd[PIPE_OUT]);
+    FILE *pout = popen(shell_command, "r");
+    if (pout == NULL) {
         perror("popen failed");
+        close(pfd[PIPE_OUT]);
         return GENERAL_ERROR;
     }
-    if (fgets(*output, sizeof(*output), pipe) == NULL) {
-        pclose(pipe);
-        fprintf(stderr, "Failed to read from pipe\n");
+    close(pfd[PIPE_OUT]);
+    if (fgets(*output, sizeof(*output), pout) == NULL) {
+        pclose(pout);
         return GENERAL_ERROR;
     }
-    pclose(pipe);
+    pclose(pout);
+    close(pfd[PIPE_READ]);
     return true;
 }
 
