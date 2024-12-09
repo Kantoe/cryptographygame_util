@@ -641,7 +641,7 @@ int8_t check_cd(const int sock_fd, const char *command,
     if (get_cd_command(command, &cd_command) != true) {
         return GENERAL_ERROR;
     }
-    char output[512];
+    char output[BUFFER_SIZE_CD];
     if (build_and_execute_cd(working_directory, cd_command, &output) != true) {
         return GENERAL_ERROR;
     }
