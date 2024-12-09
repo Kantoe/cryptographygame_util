@@ -14,7 +14,7 @@
 #include <stdbool.h>
 
 /* Buffer size constants */
-#define BUFFER_SIZE_CMD_MAX 500
+#define BUFFER_SIZE_CMD_MAX 400
 #define BUFFER_SIZE_FULL_CMD 512
 #define BUFFER_SIZE_OUTPUT 1024
 #define BUFFER_SIZE_SEND 2048
