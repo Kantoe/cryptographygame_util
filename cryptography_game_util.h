@@ -66,6 +66,7 @@
 #define CMP_EQUAL 0
 #define PIPE_READ 0
 
+
 /* Creates a TCP IPv4 socket.
  * Returns: The file descriptor for the created socket, or -1 on failure.
  */
