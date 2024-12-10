@@ -12,8 +12,8 @@ int main() {
     printf("Check data4: %d\n", check_command_data(data4)); // Should return 1
     printf("Check data5: %d\n", check_command_data(data5)); // Should return 0*/
     char buffer[1024];
-    prepare_buffer(buffer, sizeof(buffer), "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-                   "CWD");
+    prepare_buffer(buffer, sizeof(buffer), "cd /home",
+                   "CMD");
     printf("%s\n", buffer);
     return 0;
 }
