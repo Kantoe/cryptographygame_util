@@ -65,10 +65,14 @@
 #define BACKSPACE 1
 #define CMP_EQUAL 0
 #define PIPE_READ 0
+#define MIN_VALID_LENGTH 0
+#define LAST_CHAR_OFFSET 1
+#define NULL_TERMINATOR_OFFSET 1
 
-
-/* Creates a TCP IPv4 socket.
- * Returns: The file descriptor for the created socket, or -1 on failure.
+/*
+ * Creates a TCP IPv4 socket for network communication
+ * Parameters: None
+ * Returns: Socket file descriptor or -1 on error
  */
 int createTCPIpv4Socket();
 
