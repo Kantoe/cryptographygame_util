@@ -522,36 +522,60 @@ int extract_tlength(const char *tlength_str) {
 int8_t check_command_fields(char *packets_data, char *packets_type, char *packets_length,
                             const size_t packets_length_size, const ssize_t packets_data_size,
                             const size_t packets_type_size, char *packet) {
-    const char *type = strtok(packet, ";");
-    const char *data_length = strtok(NULL, ";");
-    const char *data = strtok(NULL, ";");
-    if (type && data_length && data) {
-        if (strncmp(type, "type:", TYPE_LEN) == STATUS_OKAY && strncmp(data_length, "length:", LENGTH_LEN)
-            == STATUS_OKAY && atoi(data_length + LENGTH_LEN) == strlen(data + DATA_LEN)) {
-            if (packets_data_size >= strlen(packets_data) + strlen(data)) {
-                strcat(packets_data, data + DATA_LEN);
-            }
-            if (packets_type_size >= strlen(packets_type) + strlen(type) + NULL_CHAR_LEN) {
-                strcat(packets_type, type + TYPE_LEN);
-                strcat(packets_type, ";");
-            }
-            if (packets_length_size >= strlen(packets_length) + strlen(
-                    data_length) + NULL_CHAR_LEN) {
-                strcat(packets_length, data_length + LENGTH_LEN);
-                strcat(packets_length, ";");
-            }
-        } else {
-            fprintf(stderr, "Invalid packet fields\n");
-            free(packet);
-            return GENERAL_ERROR;
-        }
-    } else {
+    char *type_start = strstr(packet, "type:");
+    char *length_start = strstr(packet, "length:");
+    char *data_start = strstr(packet, "data:");
+    if (!type_start || !length_start || !data_start) {
         fprintf(stderr, "Failed to parse packet fields\n");
         free(packet);
         return GENERAL_ERROR;
     }
+    // Extract type
+    type_start += TYPE_LEN; // Skip "type:"
+    char *type_end = strchr(type_start, ';');
+    if (!type_end) {
+        fprintf(stderr, "Invalid type field\n");
+        free(packet);
+        return GENERAL_ERROR;
+    }
+    *type_end = NULL_CHAR;
+    // Extract length
+    length_start += LENGTH_LEN; // Skip "length:"
+    char *length_end = strchr(length_start, ';');
+    if (!length_end) {
+        fprintf(stderr, "Invalid length field\n");
+        free(packet);
+        return GENERAL_ERROR;
+    }
+    *length_end = NULL_CHAR;
+    const int data_length = atoi(length_start);
+    // Extract data
+    data_start += DATA_LEN; // Skip "data:"
+    // Verify data length matches specified length
+    if (strlen(data_start) != data_length) {
+        fprintf(stderr, "Data length mismatch. Expected %d, got %zu\n",
+                data_length, strlen(data_start));
+        free(packet);
+        return GENERAL_ERROR;
+    }
+    // Add to packets_data if there's room
+    if (packets_data_size >= strlen(packets_data) + strlen(data_start) + NULL_CHAR_LEN) {
+        strcat(packets_data, data_start);
+    }
+    // Add to packets_type if there's room
+    if (packets_type_size >= strlen(packets_type) + strlen(type_start) + NULL_CHAR_LEN) {
+        strcat(packets_type, type_start);
+        strcat(packets_type, ";");
+    }
+
+    // Add to packets_length if there's room
+    if (packets_length_size >= strlen(packets_length) + strlen(length_start) + NULL_CHAR_LEN) {
+        strcat(packets_length, length_start);
+        strcat(packets_length, ";");
+    }
     return STATUS_OKAY;
 }
+
 
 /*
  * Processes a single packet by extracting and validating its fields
