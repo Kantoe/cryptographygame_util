@@ -4,7 +4,14 @@ project(cryptography_game_util C)
 set(CMAKE_C_STANDARD 11)
 
 add_library(cryptography_game_util STATIC
-        cryptography_game_util.c
+        networking.c
+        networking.h
+        commands.c
+        commands.h
+        packet_parse_and_build.c
+        packet_parse_and_build.h
+        security.c
+        security.h
 )
 
 add_executable(Test test.c)
