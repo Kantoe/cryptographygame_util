@@ -1,5 +1,0 @@
-CMakeFiles
-cmake_install.cmake
-libcryptography_game_util.a
-Makefile
-Test

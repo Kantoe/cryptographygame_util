@@ -1,4 +1,5 @@
 #include "cryptography_game_util.h"
+#include "flag_file.h"
 
 int main() {
     /*const char *data1 = "ls /home&& rm test.txt";
@@ -11,10 +12,11 @@ int main() {
     printf("Check data3: %d\n", check_command_data(data3)); // Should return 0
     printf("Check data4: %d\n", check_command_data(data4)); // Should return 1
     printf("Check data5: %d\n", check_command_data(data5)); // Should return 0*/
-    char buffer[1024];
+    /*char buffer[1024];
     prepare_buffer(buffer, sizeof(buffer), "cd /home",
                    "CMD");
-    printf("%s\n", buffer);
+    printf("%s\n", buffer);*/
+    printf("%d\n", gen_random_number(INT_MAX));
     return 0;
 }
 
