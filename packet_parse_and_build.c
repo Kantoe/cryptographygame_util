@@ -158,7 +158,6 @@ int8_t check_packet_fields(char *packets_data, char *packets_type, char *packets
         strcat(packets_type, type_start);
         strcat(packets_type, ";");
     }
-
     // Add to packets_length if there's room
     if (packets_length_size >= strlen(packets_length) + strlen(length_start) + NULL_CHAR_LEN) {
         strcat(packets_length, length_start);
