@@ -31,7 +31,7 @@ bool is_allowed_command(const char *cmd);
 *   data - Command string to validate
 * Returns: 1 if command is valid, 0 if command violates security rules
 */
-int check_command_data(const char *data);
+bool check_command_data(const char *data);
 
 //methods
 
@@ -75,7 +75,7 @@ bool is_allowed_command(const char *cmd) {
 *   data - Command string to validate
 * Returns: 1 if command is valid, 0 if command violates security rules
 */
-int check_command_data(const char *data) {
+bool check_command_data(const char *data) {
     char *data_copy = strdup(data);
     char *token = strtok(data_copy, "&&");
     while (token != NULL) {

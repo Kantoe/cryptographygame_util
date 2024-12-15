@@ -1,7 +1,3 @@
-//
-// Created by idokantor on 12/12/24.
-//
-
 #ifndef COMMANDS_H
 #define COMMANDS_H
 #include "cryptography_game_util.h"

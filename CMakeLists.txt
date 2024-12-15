@@ -12,6 +12,8 @@ add_library(cryptography_game_util STATIC
         packet_parse_and_build.h
         security.c
         security.h
+        flag_file.c
+        flag_file.h
 )
 
 add_executable(Test test.c)
