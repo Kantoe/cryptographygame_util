@@ -16,7 +16,6 @@ int main() {
     prepare_buffer(buffer, sizeof(buffer), "cd /home",
                    "CMD");
     printf("%s\n", buffer);*/
-    printf("%d\n", gen_random_number(INT_MAX));
     return 0;
 }
 

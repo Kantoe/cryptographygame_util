@@ -2,7 +2,22 @@
 
 //globals
 const char *banned_words[] = {"etc", "proc", "<", ">", "sudo"};
-const char *allowed_commands[] = {"ls", "cat", "pwd", "date", "cd"};
+const char *allowed_commands[] = {
+    "ls", // List files in a directory
+    "pwd", // Print current working directory
+    "cd", // Change directory (if safely restricted)
+    "find", // Search for files and directories
+    "tree", // Show directory structure in tree format
+    "stat", // Show file or directory metadata
+    "du", // Show disk usage of files and directories
+    "cat", // Display file contents
+    "head", // Display the first lines of a file
+    "tail", // Display the last lines of a file
+    "wc", // Count lines, words, and characters in a file
+    "grep", // Search for text patterns in files
+    "awk", // Process and format file contents
+    "cut" // Extract specific columns or sections from file data
+};
 
 //prototypes
 
