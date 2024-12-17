@@ -3,5 +3,6 @@
 
 #include "cryptography_game_util.h"
 
+int generate_random_path_name(char *path, size_t path_size);
 
 #endif //FLAG_FILE_H

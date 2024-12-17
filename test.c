@@ -16,6 +16,9 @@ int main() {
     prepare_buffer(buffer, sizeof(buffer), "cd /home",
                    "CMD");
     printf("%s\n", buffer);*/
+    char buffer[1024];
+    generate_random_path_name(buffer, 1024);
+    printf("%s -- good", buffer);
     return 0;
 }
 
