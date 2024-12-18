@@ -55,3 +55,7 @@ int generate_random_path_name(char *path, const size_t path_size) {
     }
     return STATUS_OKAY;
 }
+
+int create_flag_file(const char *command) {
+    return system(command);
+}

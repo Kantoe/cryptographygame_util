@@ -4,20 +4,20 @@
  */
 #ifndef CRYPTOGRAPHY_GAME_UTIL_H
 #define CRYPTOGRAPHY_GAME_UTIL_H
-#include <stdio.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdbool.h>
 #include <ctype.h>
 #include <limits.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <netinet/in.h>
+#include <sys/socket.h>
 #include "commands.h"
 #include "networking.h"
-#include "security.h"
 #include "packet_parse_and_build.h"
+#include "security.h"
 /* Buffer size constants */
 #define BUFFER_SIZE_CMD_MAX 400
 #define BUFFER_SIZE_FULL_CMD 512
