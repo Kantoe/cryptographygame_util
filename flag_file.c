@@ -8,7 +8,7 @@ int generate_random_path_name(char *path, const size_t path_size) {
     const uint32_t random_dir_index = arc4random_uniform(num_directories);
     const char *selected_dir = random_directories[random_dir_index];
     if (snprintf(find_paths_command, sizeof(find_paths_command),
-                 "find %s -type d | wc -l", selected_dir) >= sizeof(find_paths_command)) {
+                 "find %s -maxdepth 6 -type d | wc -l", selected_dir) >= sizeof(find_paths_command)) {
         return GENERAL_ERROR;
     }
     FILE *fp = popen(find_paths_command, "r");
@@ -21,22 +21,28 @@ int generate_random_path_name(char *path, const size_t path_size) {
         return GENERAL_ERROR;
     }
     pclose(fp);
-    const uint32_t random_path_number = arc4random_uniform(atoi(paths_number)) + 1;
-    char get_path_command[128] = {0};
-    if (snprintf(get_path_command, sizeof(get_path_command), "find %s -type d | sed -n '%dp'", selected_dir,
-                 random_path_number) >= sizeof(get_path_command)) {
-        return GENERAL_ERROR;
-    }
-    FILE *pp = popen(get_path_command, "r");
-    if (pp == NULL) {
-        return GENERAL_ERROR;
-    }
-    memset(path, 0, path_size);
-    if (fgets(path, path_size, pp) == NULL) {
+    while (1) {
+        const uint32_t random_path_number = arc4random_uniform(atoi(paths_number)) + 1;
+        char get_path_command[128] = {0};
+        if (snprintf(get_path_command, sizeof(get_path_command),
+                     "find %s -maxdepth 6 -type d | sed -n '%dp'",
+                     selected_dir, random_path_number) >= sizeof(get_path_command)) {
+            return GENERAL_ERROR;
+        }
+        FILE *pp = popen(get_path_command, "r");
+        if (pp == NULL) {
+            return GENERAL_ERROR;
+        }
+        memset(path, 0, path_size);
+        if (fgets(path, path_size, pp) == NULL) {
+            pclose(pp);
+            return GENERAL_ERROR;
+        }
+        path[strlen(path) - 1] = 0; //remove newline
         pclose(pp);
-        return GENERAL_ERROR;
+        if (!strchr(path, ' ')) {
+            break;
+        }
     }
-    path[strlen(path) - 1] = 0; //remove newline
-    pclose(pp);
     return STATUS_OKAY;
 }

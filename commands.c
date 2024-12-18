@@ -342,7 +342,8 @@ char *find_last_cd(const char *command) {
  */
 int is_valid_path_char(const char c) {
     // Valid path characters: alphanumeric, '.', '-', '_', '/', and '~'
-    return isalnum(c) || c == '.' || c == '-' || c == '_' || c == '/' || c == '~';
+    return isalnum(c) || c == '.' || c == '-' || c == '_' || c == '/' || c == '~' ||
+           c == '+' || c == '^' || c == '%' || c == '=' || c == ':' || c == ',' || c == '@';
 }
 
 /*
@@ -368,7 +369,7 @@ void extract_valid_cd_command(char *cd_command, const size_t max_len) {
     }
 
     // Find the first invalid character, starting after "cd "
-    for (size_t i = CD_AND_SPACE_LEN; i < max_len; i++) {
+    for (int i = CD_AND_SPACE_LEN; i < max_len; i++) {
         if (!is_valid_path_char(cd_command[i])) {
             cd_command[i] = '\0';
             break;
