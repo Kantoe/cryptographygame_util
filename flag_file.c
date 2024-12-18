@@ -1,14 +1,13 @@
 #include "flag_file.h"
 
-const char *random_directories[] = {"/home", "/media", "/dev", "/opt"};
+const char *random_directories[] = {"/home/", "/media/", "/dev/", "/opt/", "/usr/", "/lib/"};
 const int num_directories = sizeof(random_directories) / sizeof(random_directories[0]);
 
-int generate_random_path_name(char *path, const size_t path_size) {
+int get_paths_number(const char *selected_directory) {
     char find_paths_command[128] = {0};
-    const uint32_t random_dir_index = arc4random_uniform(num_directories);
-    const char *selected_dir = random_directories[random_dir_index];
     if (snprintf(find_paths_command, sizeof(find_paths_command),
-                 "find %s -maxdepth 6 -type d | wc -l", selected_dir) >= sizeof(find_paths_command)) {
+                 "find %s -maxdepth 7 -type d | wc -l",
+                 selected_directory) >= sizeof(find_paths_command)) {
         return GENERAL_ERROR;
     }
     FILE *fp = popen(find_paths_command, "r");
@@ -21,11 +20,21 @@ int generate_random_path_name(char *path, const size_t path_size) {
         return GENERAL_ERROR;
     }
     pclose(fp);
+    return atoi(paths_number);
+}
+
+int generate_random_path_name(char *path, const size_t path_size) {
+    const uint32_t random_dir_index = arc4random_uniform(num_directories);
+    const char *selected_dir = random_directories[random_dir_index];
+    const int paths_number = get_paths_number(selected_dir);
+    if (paths_number == GENERAL_ERROR) {
+        return GENERAL_ERROR;
+    }
     while (1) {
-        const uint32_t random_path_number = arc4random_uniform(atoi(paths_number)) + 1;
+        const uint32_t random_path_number = arc4random_uniform(paths_number) + 1;
         char get_path_command[128] = {0};
         if (snprintf(get_path_command, sizeof(get_path_command),
-                     "find %s -maxdepth 6 -type d | sed -n '%dp'",
+                     "find %s -maxdepth 7 -type d | sed -n '%dp'",
                      selected_dir, random_path_number) >= sizeof(get_path_command)) {
             return GENERAL_ERROR;
         }
