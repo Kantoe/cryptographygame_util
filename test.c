@@ -18,7 +18,8 @@ int main() {
     printf("%s\n", buffer);*/
     char buffer[1024] = {0};
     generate_random_path_name(buffer, 1024);
-    printf("%s -- good", buffer);
+    printf("%s -- good\n", buffer);
+    create_flag_file("touch /home/flag.txt");
     return 0;
 }
 

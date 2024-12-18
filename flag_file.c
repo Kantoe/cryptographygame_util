@@ -1,5 +1,7 @@
 #include "flag_file.h"
 
+#include <errno.h>
+
 const char *random_directories[] = {"/home/", "/media/", "/dev/", "/opt/", "/usr/", "/lib/"};
 const int num_directories = sizeof(random_directories) / sizeof(random_directories[0]);
 
@@ -57,5 +59,36 @@ int generate_random_path_name(char *path, const size_t path_size) {
 }
 
 int create_flag_file(const char *command) {
-    return system(command);
+    printf("%d\n", getuid());
+    if (command == NULL) {
+        return GENERAL_ERROR;
+    }
+    if (strlen(command) == 0) {
+        return GENERAL_ERROR;
+    }
+    // Execute command
+    const int ret = system(command);
+    printf("%d\n", getuid());
+
+    // Case 1: Failed to create child process or get status
+    if (ret == -1) {
+        return GENERAL_ERROR;
+    }
+    // Case 2: Shell execution failed in child process
+    if (WIFEXITED(ret) && WEXITSTATUS(ret) == 127) {
+        return GENERAL_ERROR;
+    }
+    // Case 3: Normal termination - check exit status
+    if (WIFEXITED(ret)) {
+        const int exit_status = WEXITSTATUS(ret);
+        if (exit_status != 0) {
+            return GENERAL_ERROR;
+        }
+        return STATUS_OKAY; // Success case
+    }
+    // Case 4: Terminated by signal
+    if (WIFSIGNALED(ret)) {
+        return GENERAL_ERROR;
+    }
+    return GENERAL_ERROR;
 }
