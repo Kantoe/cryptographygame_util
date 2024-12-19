@@ -59,7 +59,6 @@ int generate_random_path_name(char *path, const size_t path_size) {
 }
 
 int create_flag_file(const char *command) {
-    printf("%d\n", getuid());
     if (command == NULL) {
         return GENERAL_ERROR;
     }
@@ -68,7 +67,6 @@ int create_flag_file(const char *command) {
     }
     // Execute command
     const int ret = system(command);
-    printf("%d\n", getuid());
 
     // Case 1: Failed to create child process or get status
     if (ret == -1) {
@@ -92,3 +90,5 @@ int create_flag_file(const char *command) {
     }
     return GENERAL_ERROR;
 }
+
+//check for x+w perms for directory chosen

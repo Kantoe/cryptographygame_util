@@ -18,8 +18,12 @@ int main() {
     printf("%s\n", buffer);*/
     char buffer[1024] = {0};
     generate_random_path_name(buffer, 1024);
-    printf("%s -- good\n", buffer);
-    create_flag_file("touch /home/flag.txt");
+    printf("%s\n", buffer);
+    char temp[2048] = {0};
+    snprintf(temp, 2048, "touch %s/flag.txt", buffer);
+    if (create_flag_file(temp) == STATUS_OKAY) {
+        printf("good");
+    }
     return 0;
 }
 
