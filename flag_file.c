@@ -5,16 +5,14 @@
 const char *random_directories[] = {"/home/", "/media/", "/dev/", "/opt/", "/usr/", "/lib/"};
 const int num_directories = sizeof(random_directories) / sizeof(random_directories[0]);
 
-void generate_random_string(char *buffer, const size_t size) {
+void generate_random_string(char *buffer, const size_t buf_size) {
     const char charset[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
     const size_t charset_size = strlen(charset);
-    // Fill the buffer with random bytes
-    arc4random_buf(buffer, size);
     // Map random bytes directly into the character set
-    for (size_t i = 0; i < size; i++) {
-        buffer[i] = charset[(unsigned char) buffer[i] % charset_size];
+    for (size_t i = 0; i < buf_size; i++) {
+        buffer[i] = charset[arc4random_uniform(charset_size)];
     }
-    buffer[size] = NULL_CHAR; // Null-terminate the string
+    buffer[buf_size] = NULL_CHAR; // Null-terminate the string
 }
 
 int check_permissions(const char *path) {
