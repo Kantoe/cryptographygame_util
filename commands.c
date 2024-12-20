@@ -248,7 +248,7 @@ int send_command_stderr(const int socket_fd, int pfd[2], int8_t *error_check, FI
         // Send each error line to the socket
         *error_check = 1;
         char buffer[BUFFER_SIZE_SEND] = {0};
-        prepare_buffer(buffer, sizeof(buffer), output, "OUT");
+        prepare_buffer(buffer, sizeof(buffer), output, "ERR");
         s_send(socket_fd, buffer, strlen(buffer));
     }
     return STATUS_OKAY;

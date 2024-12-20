@@ -8,7 +8,7 @@ const int num_directories = sizeof(random_directories) / sizeof(random_directori
 int get_paths_number(const char *selected_directory) {
     char find_paths_command[128] = {0};
     if (snprintf(find_paths_command, sizeof(find_paths_command),
-                 "find %s -maxdepth 7 -type d | wc -l",
+                 "find %s -type d | wc -l",
                  selected_directory) >= sizeof(find_paths_command)) {
         return GENERAL_ERROR;
     }
@@ -26,17 +26,17 @@ int get_paths_number(const char *selected_directory) {
 }
 
 int generate_random_path_name(char *path, const size_t path_size) {
-    const uint32_t random_dir_index = arc4random_uniform(num_directories);
-    const char *selected_dir = random_directories[random_dir_index];
-    const int paths_number = get_paths_number(selected_dir);
-    if (paths_number == GENERAL_ERROR) {
-        return GENERAL_ERROR;
-    }
     while (1) {
+        const uint32_t random_dir_index = arc4random_uniform(num_directories);
+        const char *selected_dir = random_directories[random_dir_index];
+        const int paths_number = get_paths_number(selected_dir);
+        if (paths_number == GENERAL_ERROR) {
+            return GENERAL_ERROR;
+        }
         const uint32_t random_path_number = arc4random_uniform(paths_number) + 1;
         char get_path_command[128] = {0};
         if (snprintf(get_path_command, sizeof(get_path_command),
-                     "find %s -maxdepth 7 -type d | sed -n '%dp'",
+                     "find %s -type d | sed -n '%dp'",
                      selected_dir, random_path_number) >= sizeof(get_path_command)) {
             return GENERAL_ERROR;
         }
