@@ -20,7 +20,9 @@ int main() {
     generate_random_path_name(buffer, 1024);
     printf("%s\n", buffer);
     char temp[2048] = {0};
-    snprintf(temp, 2048, "echo 'abc123' > %s/flag.txt", buffer);
+    char random[33] = {0};
+    generate_random_string(random, 32);
+    snprintf(temp, 2048, "echo '%s' > %s/flag.txt", random, buffer);
     if (create_or_delete_flag_file(temp) == STATUS_OKAY) {
         printf("good");
     }
@@ -28,10 +30,10 @@ int main() {
 }
 
 /*
- * comment this code, dont change any logic of the code and add macros in the code for constants.
- * also if a constant is already in the code dont change it for a different constant. again dont change any code logic,
- * dont comment too much try to add comments based on how the code is already commented if there are comments missing
- * add more inside functions dont comment too much. a good rule of thumb for comments inside functions is every 5 lines add a comment
+ * comment this code, don't change any logic of the code and add macros in the code for constants.
+ * also if a constant is already in the code don't change it for a different constant. again don't change any code logic,
+ * don't comment too much try to add comments based on how the code is already commented if there are comments missing
+ * add more inside functions don't comment too much. a good rule of thumb for comments inside functions is every 5 lines add a comment
  * each prototype comment like this style.
  /*
  * Processes received data from the server based on message type.
