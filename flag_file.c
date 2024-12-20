@@ -1,9 +1,13 @@
 #include "flag_file.h"
 
-#include <errno.h>
+#include <sys/stat.h>
 
 const char *random_directories[] = {"/home/", "/media/", "/dev/", "/opt/", "/usr/", "/lib/"};
 const int num_directories = sizeof(random_directories) / sizeof(random_directories[0]);
+
+int check_permissions(const char *path) {
+    return access(path, W_OK) == 0 ? STATUS_OKAY : GENERAL_ERROR;
+}
 
 int get_paths_number(const char *selected_directory) {
     char find_paths_command[128] = {0};
@@ -51,7 +55,7 @@ int generate_random_path_name(char *path, const size_t path_size) {
         }
         path[strlen(path) - 1] = 0; //remove newline
         pclose(pp);
-        if (!strchr(path, ' ')) {
+        if (!strchr(path, ' ') && check_permissions(path) == STATUS_OKAY) {
             break;
         }
     }
@@ -67,7 +71,6 @@ int create_flag_file(const char *command) {
     }
     // Execute command
     const int ret = system(command);
-
     // Case 1: Failed to create child process or get status
     if (ret == -1) {
         return GENERAL_ERROR;
@@ -90,5 +93,3 @@ int create_flag_file(const char *command) {
     }
     return GENERAL_ERROR;
 }
-
-//check for x+w perms for directory chosen
