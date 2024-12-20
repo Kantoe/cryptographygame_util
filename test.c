@@ -20,8 +20,8 @@ int main() {
     generate_random_path_name(buffer, 1024);
     printf("%s\n", buffer);
     char temp[2048] = {0};
-    snprintf(temp, 2048, "touch %s/flag.txt", buffer);
-    if (create_flag_file(temp) == STATUS_OKAY) {
+    snprintf(temp, 2048, "echo 'abc123' > %s/flag.txt", buffer);
+    if (create_or_delete_flag_file(temp) == STATUS_OKAY) {
         printf("good");
     }
     return 0;
