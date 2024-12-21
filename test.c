@@ -13,7 +13,7 @@ int main() {
     printf("Check data4: %d\n", check_command_data(data4)); // Should return 1
     printf("Check data5: %d\n", check_command_data(data5)); // Should return 0*/
     char buffer[1024];
-    prepare_buffer(buffer, sizeof(buffer), "FLG_DIR",
+    prepare_buffer(buffer, sizeof(buffer), "error",
                    "FLG");
     printf("%s\n", buffer);
     /*char buffer[1024] = {0};
