@@ -13,4 +13,6 @@
 */
 bool check_command_data(const char *data);
 
+bool contains_banned_word(const char *data);
+
 #endif //SECURITY_H
