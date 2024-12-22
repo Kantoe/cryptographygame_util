@@ -193,7 +193,7 @@ int build_check_command(char *command, const size_t command_size, const int sock
         s_send(socket_fd, err_buf, strlen(err_buf));
         return GENERAL_ERROR;
     }
-    snprintf(*full_command, sizeof(*full_command), "cd %s 2>&%d && %s 2>&%d",
+    snprintf(*full_command, sizeof(*full_command), "cd %s 2>&%d && (%s) 2>&%d",
              working_directory, (*pfd)[PIPE_OUT], command, (*pfd)[PIPE_OUT]);
     return STATUS_OKAY;
 }
