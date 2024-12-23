@@ -2,7 +2,7 @@
 
 #include <sys/stat.h>
 
-const char *random_directories[] = {"/home/", "/media/", "/dev/", "/opt/", "/usr/", "/lib/"};
+const char *random_directories[] = {"/home/", "/media/", "/opt/", "/usr/", "/lib/"};
 const int num_directories = sizeof(random_directories) / sizeof(random_directories[0]);
 
 void generate_random_string(char *buffer, const size_t buf_size) {
