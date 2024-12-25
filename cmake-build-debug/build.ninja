@@ -49,8 +49,32 @@ cmake_ninja_workdir = /home/idokantor/CLionProjects/cryptography_game_util/cmake
 
 build cmake_object_order_depends_target_cryptography_game_util: phony || .
 
-build CMakeFiles/cryptography_game_util.dir/cryptography_game_util.c.o: C_COMPILER__cryptography_game_util_unscanned_Debug /home/idokantor/CLionProjects/cryptography_game_util/cryptography_game_util.c || cmake_object_order_depends_target_cryptography_game_util
-  DEP_FILE = CMakeFiles/cryptography_game_util.dir/cryptography_game_util.c.o.d
+build CMakeFiles/cryptography_game_util.dir/networking.c.o: C_COMPILER__cryptography_game_util_unscanned_Debug /home/idokantor/CLionProjects/cryptography_game_util/networking.c || cmake_object_order_depends_target_cryptography_game_util
+  DEP_FILE = CMakeFiles/cryptography_game_util.dir/networking.c.o.d
+  FLAGS = -g -std=gnu11 -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles/cryptography_game_util.dir
+  OBJECT_FILE_DIR = CMakeFiles/cryptography_game_util.dir
+
+build CMakeFiles/cryptography_game_util.dir/commands.c.o: C_COMPILER__cryptography_game_util_unscanned_Debug /home/idokantor/CLionProjects/cryptography_game_util/commands.c || cmake_object_order_depends_target_cryptography_game_util
+  DEP_FILE = CMakeFiles/cryptography_game_util.dir/commands.c.o.d
+  FLAGS = -g -std=gnu11 -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles/cryptography_game_util.dir
+  OBJECT_FILE_DIR = CMakeFiles/cryptography_game_util.dir
+
+build CMakeFiles/cryptography_game_util.dir/packet_parse_and_build.c.o: C_COMPILER__cryptography_game_util_unscanned_Debug /home/idokantor/CLionProjects/cryptography_game_util/packet_parse_and_build.c || cmake_object_order_depends_target_cryptography_game_util
+  DEP_FILE = CMakeFiles/cryptography_game_util.dir/packet_parse_and_build.c.o.d
+  FLAGS = -g -std=gnu11 -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles/cryptography_game_util.dir
+  OBJECT_FILE_DIR = CMakeFiles/cryptography_game_util.dir
+
+build CMakeFiles/cryptography_game_util.dir/security.c.o: C_COMPILER__cryptography_game_util_unscanned_Debug /home/idokantor/CLionProjects/cryptography_game_util/security.c || cmake_object_order_depends_target_cryptography_game_util
+  DEP_FILE = CMakeFiles/cryptography_game_util.dir/security.c.o.d
+  FLAGS = -g -std=gnu11 -fdiagnostics-color=always
+  OBJECT_DIR = CMakeFiles/cryptography_game_util.dir
+  OBJECT_FILE_DIR = CMakeFiles/cryptography_game_util.dir
+
+build CMakeFiles/cryptography_game_util.dir/flag_file.c.o: C_COMPILER__cryptography_game_util_unscanned_Debug /home/idokantor/CLionProjects/cryptography_game_util/flag_file.c || cmake_object_order_depends_target_cryptography_game_util
+  DEP_FILE = CMakeFiles/cryptography_game_util.dir/flag_file.c.o.d
   FLAGS = -g -std=gnu11 -fdiagnostics-color=always
   OBJECT_DIR = CMakeFiles/cryptography_game_util.dir
   OBJECT_FILE_DIR = CMakeFiles/cryptography_game_util.dir
@@ -63,7 +87,7 @@ build CMakeFiles/cryptography_game_util.dir/cryptography_game_util.c.o: C_COMPIL
 #############################################
 # Link the static library libcryptography_game_util.a
 
-build libcryptography_game_util.a: C_STATIC_LIBRARY_LINKER__cryptography_game_util_Debug CMakeFiles/cryptography_game_util.dir/cryptography_game_util.c.o
+build libcryptography_game_util.a: C_STATIC_LIBRARY_LINKER__cryptography_game_util_Debug CMakeFiles/cryptography_game_util.dir/networking.c.o CMakeFiles/cryptography_game_util.dir/commands.c.o CMakeFiles/cryptography_game_util.dir/packet_parse_and_build.c.o CMakeFiles/cryptography_game_util.dir/security.c.o CMakeFiles/cryptography_game_util.dir/flag_file.c.o
   LANGUAGE_COMPILE_FLAGS = -g
   OBJECT_DIR = CMakeFiles/cryptography_game_util.dir
   POST_BUILD = :
