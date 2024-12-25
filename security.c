@@ -6,7 +6,6 @@ const char *allowed_commands[] = {
     "ls", // List files in a directory
     "pwd", // Print current working directory
     "cd", // Change directory (if safely restricted)
-    "find", // Search for files and directories
     "tree", // Show directory structure in tree format
     "stat", // Show file or directory metadata
     "du", // Show disk usage of files and directories
@@ -16,7 +15,8 @@ const char *allowed_commands[] = {
     "wc", // Count lines, words, and characters in a file
     "grep", // Search for text patterns in files
     "awk", // Process and format file contents
-    "cut" // Extract specific columns or sections from file data
+    "cut", // Extract specific columns or sections from file data
+    "file" // Determine file type
 };
 
 //prototypes
