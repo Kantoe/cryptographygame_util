@@ -12,17 +12,17 @@ int main() {
     printf("Check data3: %d\n", check_command_data(data3)); // Should return 0
     printf("Check data4: %d\n", check_command_data(data4)); // Should return 1
     printf("Check data5: %d\n", check_command_data(data5)); // Should return 0*/
-    /*char buffer[1024];
-    prepare_buffer(buffer, sizeof(buffer), "you lost ):\n",
-                   "OUT");
+    char buffer[1024];
+    prepare_buffer(buffer, sizeof(buffer), "game limit reached\n",
+                   "ERR");
     printf("%s\n", buffer);
-    char buffer[1024] = {0};
+    /*char buffer[1024] = {0};
     generate_random_path_name(buffer, 1024);
     printf("%s\n", buffer);
     char temp[2048] = {0};*/
-    char random[33] = {0};
+    /*char random[33] = {0};
     generate_random_string(random, 32);
-    printf("%s\n", random);
+    printf("%s\n", random);*/
     /*snprintf(temp, 2048, "echo '%s' > %s/flag.txt", random, buffer);
     if (create_or_delete_flag_file(temp) == STATUS_OKAY) {
         printf("good");
