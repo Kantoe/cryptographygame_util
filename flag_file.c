@@ -1,7 +1,5 @@
 #include "flag_file.h"
 
-#include <sys/stat.h>
-
 const char *random_directories[] = {"/home/", "/media/", "/opt/", "/usr/", "/lib/"};
 const int num_directories = sizeof(random_directories) / sizeof(random_directories[0]);
 
