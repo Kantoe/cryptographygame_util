@@ -22,7 +22,7 @@ int check_permissions(const char *path) {
 int get_paths_number(const char *selected_directory) {
     char find_paths_command[128] = {0};
     if (snprintf(find_paths_command, sizeof(find_paths_command),
-                 "find %s -type d | wc -l",
+                 "find %s -maxdepth 5 -type d | wc -l",
                  selected_directory) >= sizeof(find_paths_command)) {
         return GENERAL_ERROR;
     }
@@ -50,7 +50,7 @@ int generate_random_path_name(char *path, const size_t path_size) {
         const uint32_t random_path_number = arc4random_uniform(paths_number) + 1;
         char get_path_command[128] = {0};
         if (snprintf(get_path_command, sizeof(get_path_command),
-                     "find %s -type d | sed -n '%dp'",
+                     "find %s -maxdepth 5 -type d | sed -n '%dp'",
                      selected_dir, random_path_number) >= sizeof(get_path_command)) {
             return GENERAL_ERROR;
         }
@@ -72,7 +72,7 @@ int generate_random_path_name(char *path, const size_t path_size) {
     return STATUS_OKAY;
 }
 
-int create_or_delete_flag_file(const char *command) {
+int execute_command(const char *command) {
     if (command == NULL) {
         return GENERAL_ERROR;
     }

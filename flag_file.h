@@ -5,7 +5,7 @@
 
 int generate_random_path_name(char *path, size_t path_size);
 
-int create_or_delete_flag_file(const char *command);
+int execute_command(const char *command);
 
 void generate_random_string(char *buffer, size_t buf_size);
 

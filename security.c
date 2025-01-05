@@ -16,7 +16,8 @@ const char *allowed_commands[] = {
     "grep", // Search for text patterns in files
     "awk", // Process and format file contents
     "cut", // Extract specific columns or sections from file data
-    "file" // Determine file type
+    "file", // Determine file type
+    "openssl" // For encryption
 };
 
 //prototypes
