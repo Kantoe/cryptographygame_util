@@ -99,7 +99,7 @@ int createIPv4Address(const char *ip, const int port,
 * Returns: Number of bytes sent including length prefix, or -1 on error
 */
 ssize_t s_send(const int socket, const char *data, const size_t data_size) {
-    char length_string[NUM_ZERO + NULL_CHAR_LEN] = {0}; // +1 for null-terminator
+    char length_string[NUM_ZERO + NULL_CHAR_LEN] = {NULL_CHAR}; // +1 for null-terminator
     const size_t buf_size = NUM_ZERO + data_size + NULL_CHAR_LEN;
     char buffer[buf_size];
     memset(buffer, NULL_CHAR, buf_size);
@@ -173,7 +173,7 @@ ssize_t receive_raw_data(const int socket, char *data, const size_t received_dat
 * Returns: Total bytes received including length prefix, or -1 on error
 */
 ssize_t s_recv(const int socket, char *data, const size_t data_size) {
-    char raw_size[LENGTH_CHECK + NULL_CHAR_LEN] = {0};
+    char raw_size[LENGTH_CHECK + NULL_CHAR_LEN] = {NULL_CHAR};
     // Buffer for the size header (+1 for null-terminator)
     const ssize_t raw_size_check = receive_raw_size(socket, raw_size);
     if (raw_size_check == GENERAL_ERROR) {

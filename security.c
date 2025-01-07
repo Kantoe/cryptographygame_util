@@ -17,6 +17,7 @@ const char *allowed_commands[] = {
     "awk", // Process and format file contents
     "cut", // Extract specific columns or sections from file data
     "file", // Determine file type
+    "find", // Find - search for files in a directory hierarchy
     "openssl" // For encryption
 };
 
@@ -106,7 +107,7 @@ bool check_command_data(const char *data) {
             return false; // Banned word found, return 0
         }
         // Check if the command is allowed
-        char cmd[BUFFER_SIZE_OUTPUT] = {0};
+        char cmd[BUFFER_SIZE_OUTPUT] = {NULL_CHAR};
         sscanf(token, "%s", cmd); // Extract the command (first word)
         if (!is_allowed_command(cmd)) {
             free(data_copy);

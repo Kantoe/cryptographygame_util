@@ -47,7 +47,7 @@
 #define STATUS_OKAY 0
 
 #define PIPE_OUT 1
-#define PIPE_ERR 0
+#define PIPE_SUCCESS 0
 #define BASE_TEN 10               // The base for dividing numbers
 #define SINGLE_DIGIT_LIMIT 9      // Largest single-digit number
 #define HANDLE_NEGATIVE(n) ((n) < 0 ? -(n) : (n))  // Convert to absolute value
@@ -73,5 +73,8 @@
 #define MIN_VALID_LENGTH 0
 #define LAST_CHAR_OFFSET 1
 #define NULL_TERMINATOR_OFFSET 1
+#define ACCESS_SUCCESS 0
+#define SYSTEM_FAILURE -1
+#define EXE_CHILD_FAIL_CHECK 127
 
 #endif

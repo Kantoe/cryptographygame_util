@@ -218,7 +218,7 @@ int send_command_stdout(const int socket_fd, int pfd[2], char full_command[512],
     close(pfd[PIPE_OUT]);
     while (fgets(output, BUFFER_SIZE_OUTPUT, *pout) != NULL) {
         // Send each line to the socket
-        char buffer[BUFFER_SIZE_SEND] = {0};
+        char buffer[BUFFER_SIZE_SEND] = {NULL_CHAR};
         prepare_buffer(buffer, sizeof(buffer), output, "OUT");
         s_send(socket_fd, buffer, strlen(buffer));
     }
@@ -238,7 +238,7 @@ int send_command_stdout(const int socket_fd, int pfd[2], char full_command[512],
  */
 int send_command_stderr(const int socket_fd, int pfd[2], int8_t *error_check, FILE *pout, char output[1024],
                         FILE **pipe_err) {
-    *pipe_err = fdopen(pfd[PIPE_ERR], "r");
+    *pipe_err = fdopen(pfd[PIPE_SUCCESS], "r");
     if (*pipe_err == NULL) {
         perror("fdopen failed");
         pclose(pout);
@@ -246,8 +246,8 @@ int send_command_stderr(const int socket_fd, int pfd[2], int8_t *error_check, FI
     }
     while (fgets(output, BUFFER_SIZE_OUTPUT, *pipe_err) != NULL) {
         // Send each error line to the socket
-        *error_check = 1;
-        char buffer[BUFFER_SIZE_SEND] = {0};
+        *error_check = true;
+        char buffer[BUFFER_SIZE_SEND] = {NULL_CHAR};
         prepare_buffer(buffer, sizeof(buffer), output, "ERR");
         s_send(socket_fd, buffer, strlen(buffer));
     }
@@ -364,7 +364,7 @@ int is_valid_path_char(const char c) {
  */
 void extract_valid_cd_command(char *cd_command, const size_t max_len) {
     // Check if the command starts with "cd "
-    if (strncmp(cd_command, "cd ", CD_AND_SPACE_LEN) != 0) {
+    if (strncmp(cd_command, "cd ", CD_AND_SPACE_LEN) != CMP_EQUAL) {
         return; // Not a cd command, do nothing
     }
 
