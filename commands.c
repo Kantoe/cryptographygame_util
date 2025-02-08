@@ -279,7 +279,7 @@ int execute_command_and_send(char *command, const size_t command_size,
         return GENERAL_ERROR;
     }
     FILE *pout;
-    char output[BUFFER_SIZE_OUTPUT];
+    char output[BUFFER_SIZE_OUTPUT] = {0};
     if (send_command_stdout(socket_fd, pfd, full_command, &pout, output) == GENERAL_ERROR) {
         return GENERAL_ERROR;
     }
