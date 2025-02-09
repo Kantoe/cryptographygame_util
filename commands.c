@@ -40,7 +40,7 @@ char *find_last_cd(const char *command);
  *   working_directory_size - Size of the working directory buffer
  * Returns: Status of the entire CD command processing
  */
-int8_t check_cd(int sock_fd, const char *command,
+int8_t check_cd(int sock_fd, const unsigned char *encryption_key, const char *command,
                 char *working_directory, size_t working_directory_size);
 
 /*
@@ -54,7 +54,7 @@ int8_t check_cd(int sock_fd, const char *command,
  *   full_command - Buffer for complete command string
  * Returns: 0 on success, -1 on error
  */
-int build_check_command(char *command, size_t command_size, int socket_fd,
+int build_check_command(char *command, size_t command_size, int socket_fd, const unsigned char *encryption_key,
                         char *working_directory, int (*pfd)[2],
                         char (*full_command)[512]);
 
@@ -68,7 +68,7 @@ int build_check_command(char *command, size_t command_size, int socket_fd,
  *   output - Buffer for command output
  * Returns: 0 on success, -1 on error
  */
-int send_command_stdout(int socket_fd, int pfd[2], char full_command[512],
+int send_command_stdout(int socket_fd, const unsigned char *encryption_key, int pfd[2], char full_command[512],
                         FILE **pout, char output[1024]);
 
 /*
@@ -82,7 +82,7 @@ int send_command_stdout(int socket_fd, int pfd[2], char full_command[512],
  *   pipe_err - Pointer to FILE stream for errors
  * Returns: 0 on success, -1 on error
  */
-int send_command_stderr(int socket_fd, int pfd[2], int8_t *error_check,
+int send_command_stderr(int socket_fd, const unsigned char *encryption_key, int pfd[2], int8_t *error_check,
                         FILE *pout, char output[1024], FILE **pipe_err);
 
 
@@ -181,7 +181,8 @@ int8_t build_and_execute_cd(char *working_directory, char *cd_command, char (*ou
  * Returns: 0 on success, -1 on error
  */
 
-int build_check_command(char *command, const size_t command_size, const int socket_fd, char *working_directory,
+int build_check_command(char *command, const size_t command_size, const int socket_fd,
+                        const unsigned char *encryption_key, char *working_directory,
                         int (*pfd)[2], char (*full_command)[512]) {
     if (pipe(*pfd) < PIPE_ERR_CHECK) {
         perror("pipe failed");
@@ -190,7 +191,7 @@ int build_check_command(char *command, const size_t command_size, const int sock
     if (command_size + strlen(working_directory) > BUFFER_SIZE_CMD_MAX) {
         char err_buf[ERR_BUFFER_SIZE];
         prepare_buffer(err_buf, sizeof(err_buf), "command size too large\n", "ERR");
-        s_send(socket_fd, err_buf, strlen(err_buf));
+        s_send(socket_fd, encryption_key, err_buf, strlen(err_buf));
         return GENERAL_ERROR;
     }
     snprintf(*full_command, sizeof(*full_command), "cd %s 2>&%d && (%s) 2>&%d",
@@ -208,7 +209,8 @@ int build_check_command(char *command, const size_t command_size, const int sock
  *   output - Buffer for command output
  * Returns: 0 on success, -1 on error
  */
-int send_command_stdout(const int socket_fd, int pfd[2], char full_command[512], FILE **pout, char output[1024]) {
+int send_command_stdout(const int socket_fd, const unsigned char *encryption_key, int pfd[2], char full_command[512],
+                        FILE **pout, char output[1024]) {
     *pout = popen(full_command, "r");
     if (*pout == NULL) {
         perror("popen failed");
@@ -220,7 +222,7 @@ int send_command_stdout(const int socket_fd, int pfd[2], char full_command[512],
         // Send each line to the socket
         char buffer[BUFFER_SIZE_SEND] = {NULL_CHAR};
         prepare_buffer(buffer, sizeof(buffer), output, "OUT");
-        s_send(socket_fd, buffer, strlen(buffer));
+        s_send(socket_fd, encryption_key, buffer, strlen(buffer));
     }
     return STATUS_OKAY;
 }
@@ -236,7 +238,8 @@ int send_command_stdout(const int socket_fd, int pfd[2], char full_command[512],
  *   pipe_err - Pointer to FILE stream for errors
  * Returns: 0 on success, -1 on error
  */
-int send_command_stderr(const int socket_fd, int pfd[2], int8_t *error_check, FILE *pout, char output[1024],
+int send_command_stderr(const int socket_fd, const unsigned char *encryption_key, int pfd[2], int8_t *error_check,
+                        FILE *pout, char output[1024],
                         FILE **pipe_err) {
     *pipe_err = fdopen(pfd[PIPE_SUCCESS], "r");
     if (*pipe_err == NULL) {
@@ -249,7 +252,7 @@ int send_command_stderr(const int socket_fd, int pfd[2], int8_t *error_check, FI
         *error_check = true;
         char buffer[BUFFER_SIZE_SEND] = {NULL_CHAR};
         prepare_buffer(buffer, sizeof(buffer), output, "ERR");
-        s_send(socket_fd, buffer, strlen(buffer));
+        s_send(socket_fd, encryption_key, buffer, strlen(buffer));
     }
     return STATUS_OKAY;
 }
@@ -268,27 +271,27 @@ int send_command_stderr(const int socket_fd, int pfd[2], int8_t *error_check, FI
 * Returns: 0 on success, -1 on failure
 */
 int execute_command_and_send(char *command, const size_t command_size,
-                             const int socket_fd, char *working_directory,
+                             const int socket_fd, const unsigned char *encryption_key, char *working_directory,
                              const size_t working_directory_size) {
     int pfd[2];
     int8_t error_check = 0;
     char full_command[BUFFER_SIZE_FULL_CMD];
-    s_send(socket_fd,EMPTY_DATA, strlen(EMPTY_DATA));
-    if (build_check_command(command, command_size, socket_fd, working_directory, &pfd, &full_command) ==
+    s_send(socket_fd, encryption_key,EMPTY_DATA, strlen(EMPTY_DATA));
+    if (build_check_command(command, command_size, socket_fd, encryption_key, working_directory, &pfd, &full_command) ==
         GENERAL_ERROR) {
         return GENERAL_ERROR;
     }
     FILE *pout;
     char output[BUFFER_SIZE_OUTPUT] = {0};
-    if (send_command_stdout(socket_fd, pfd, full_command, &pout, output) == GENERAL_ERROR) {
+    if (send_command_stdout(socket_fd, encryption_key, pfd, full_command, &pout, output) == GENERAL_ERROR) {
         return GENERAL_ERROR;
     }
     FILE *pipe_err;
-    if (send_command_stderr(socket_fd, pfd, &error_check, pout, output, &pipe_err) == GENERAL_ERROR) {
+    if (send_command_stderr(socket_fd, encryption_key, pfd, &error_check, pout, output, &pipe_err) == GENERAL_ERROR) {
         return GENERAL_ERROR;
     }
     if (!error_check) {
-        check_cd(socket_fd, command, working_directory, working_directory_size);
+        check_cd(socket_fd, encryption_key, command, working_directory, working_directory_size);
     }
     // Clean up
     pclose(pout);
@@ -477,7 +480,7 @@ int8_t build_and_execute_cd(char *working_directory, char *cd_command, char (*ou
  *   working_directory_size - Size of the working directory buffer
  * Returns: Status of the entire CD command processing
  */
-int8_t check_cd(const int sock_fd, const char *command,
+int8_t check_cd(const int sock_fd, const unsigned char *encryption_key, const char *command,
                 char *working_directory, const size_t working_directory_size) {
     char *cd_command;
     if (get_cd_command(command, &cd_command) != true) {
@@ -504,7 +507,7 @@ int8_t check_cd(const int sock_fd, const char *command,
     char cd_buf[BUFFER_SIZE_CD];
     prepare_buffer(cd_buf, sizeof(cd_buf), working_directory, "CWD");
     // Send the updated working directory to the client
-    if (s_send(sock_fd, cd_buf, strlen(cd_buf)) < 0) {
+    if (s_send(sock_fd, encryption_key, cd_buf, strlen(cd_buf)) < 0) {
         perror("s_send failed");
         return GENERAL_ERROR;
     }

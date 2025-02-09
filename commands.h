@@ -16,6 +16,6 @@
 * Returns: 0 on success, -1 on failure
 */
 int execute_command_and_send(char *command, size_t command_size,
-                             int socket_fd, char *working_directory,
+                             int socket_fd, const unsigned char *encryption_key, char *working_directory,
                              size_t working_directory_size);
 #endif //COMMANDS_H

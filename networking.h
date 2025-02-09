@@ -37,7 +37,7 @@ int createIPv4Address(const char *ip, int port, struct sockaddr_in *address);
 *   data_size - Size of the data to send
 * Returns: Number of bytes sent including length prefix, or -1 on error
 */
-ssize_t s_send(int socket, const char *data, size_t data_size);
+ssize_t s_send(int socket, const unsigned char *key, const char *data, size_t data_size);
 
 /*
 * Receives data from a socket with length prefix handling.
@@ -50,7 +50,7 @@ ssize_t s_send(int socket, const char *data, size_t data_size);
 *   data_size - Maximum size of receive buffer
 * Returns: Total bytes received including length prefix, or -1 on error
 */
-ssize_t s_recv(int socket, char *data, size_t data_size);
+ssize_t s_recv(int socket, char *data, size_t data_size, const unsigned char *key);
 
 /*
 * Validates command string against security rules.

@@ -1,7 +1,7 @@
 #include "security.h"
 
 //globals
-const char *banned_words[] = {"etc", "proc", "<", ">", "sudo"};
+const char *banned_words[] = {"etc", "proc", "sudo"};
 const char *allowed_commands[] = {
     "ls", // List files in a directory
     "pwd", // Print current working directory
@@ -18,7 +18,8 @@ const char *allowed_commands[] = {
     "cut", // Extract specific columns or sections from file data
     "file", // Determine file type
     "find", // Find - search for files in a directory hierarchy
-    "openssl" // For encryption
+    "openssl", // For encryption
+    "mv" // For moving files
 };
 
 //prototypes

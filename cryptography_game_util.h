@@ -18,6 +18,9 @@
 #include "networking.h"
 #include "packet_parse_and_build.h"
 #include "security.h"
+#include "aes_encryption.h"
+#include "key_exchange.h"
+
 /* Buffer size constants */
 #define BUFFER_SIZE_CMD_MAX 400
 #define BUFFER_SIZE_FULL_CMD 512

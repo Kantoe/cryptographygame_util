@@ -1,3 +1,6 @@
+#include <openssl/aes.h>
+
+#include "aes_encryption.h"
 #include "cryptography_game_util.h"
 #include "flag_file.h"
 
@@ -12,10 +15,10 @@ int main() {
     printf("Check data3: %d\n", check_command_data(data3)); // Should return 0
     printf("Check data4: %d\n", check_command_data(data4)); // Should return 1
     printf("Check data5: %d\n", check_command_data(data5)); // Should return 0*/
-    char buffer[1024];
+    /*char buffer[1024];
     prepare_buffer(buffer, sizeof(buffer), "\nWait for second client to connect\n",
                    "KEY");
-    printf("%s\n", buffer);
+    printf("%s\n", buffer);*/
     /*char buffer[1024] = {0};
     generate_random_path_name(buffer, 1024);
     printf("%s\n", buffer);
@@ -27,6 +30,41 @@ int main() {
     if (create_or_delete_flag_file(temp) == STATUS_OKAY) {
         printf("good");
     }*/
+    // Test message
+    const char *message = "ls /home";
+    const size_t message_len = strlen(message);
+    // Fixed key for testing (32 bytes for AES-256)
+    unsigned char key[32] = {
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+        17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
+    };
+    // Encrypt
+    size_t encrypted_len;
+    char *encrypted = aes_encrypt(key, (unsigned char *) message, message_len, &encrypted_len);
+    if (!encrypted) {
+        printf("Encryption failed\n");
+        return 1;
+    }
+    printf("Original: %s\n", message);
+    printf("Encrypted (base64): %s\n", encrypted);
+    // Decrypt
+    size_t decrypted_len;
+    unsigned char *decrypted = aes_decrypt(key, encrypted, encrypted_len, &decrypted_len);
+    if (!decrypted) {
+        printf("Decryption failed\n");
+        free(encrypted);
+        return 1;
+    }
+    // Add null terminator for printing
+    char *decrypted_str = malloc(decrypted_len + 1);
+    memcpy(decrypted_str, decrypted, decrypted_len);
+    decrypted_str[decrypted_len] = '\0';
+
+    printf("Decrypted: %s\n", decrypted_str);
+    // Clean up
+    free(encrypted);
+    free(decrypted);
+    free(decrypted_str);
     return 0;
 }
 
